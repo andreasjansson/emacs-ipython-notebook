@@ -40,18 +40,18 @@
 ;;; Define aliases to old variables and functions.
 
 (define-obsolete-variable-alias
-  'ein:notebook-console-security-dir 'ein:console-security-dir "0.1.2")
+  'ein2:notebook-console-security-dir 'ein2:console-security-dir "0.1.2")
 (define-obsolete-variable-alias
-  'ein:notebook-console-executable 'ein:console-executable "0.1.2")
+  'ein2:notebook-console-executable 'ein2:console-executable "0.1.2")
 (define-obsolete-variable-alias
-  'ein:notebook-console-args 'ein:console-args "0.1.2")
+  'ein2:notebook-console-args 'ein2:console-args "0.1.2")
 (define-obsolete-function-alias
-  'ein:notebook-console-open 'ein:console-open "0.1.2")
+  'ein2:notebook-console-open 'ein2:console-open "0.1.2")
 
 
 ;;; Configuration
 
-(defcustom ein:console-security-dir ""
+(defcustom ein2:console-security-dir ""
   "Security directory setting.
 
 Following types are valid:
@@ -83,11 +83,11 @@ function
                               url-or-port))))
   :group 'ein)
 
-(defcustom ein:console-executable (executable-find "ipython")
+(defcustom ein2:console-executable (executable-find "ipython")
   "IPython executable used for console.
 
 Example: ``\"/user/bin/ipython\"``.
-Types same as `ein:console-security-dir' are valid."
+Types same as `ein2:console-security-dir' are valid."
   :type '(choice
           (string :tag "IPython executable" "/user/bin/ipython")
           (alist :tag "IPython executable mapping"
@@ -101,7 +101,7 @@ Types same as `ein:console-security-dir' are valid."
                     (lambda (url-or-port) (executable-find "ipython"))))
   :group 'ein)
 
-(defcustom ein:console-args '("--profile" "nbserver")
+(defcustom ein2:console-args '("--profile" "nbserver")
   "Additional argument when using console.
 
 .. warning:: Space-separated string is obsolete now.  Use a list
@@ -109,27 +109,27 @@ Types same as `ein:console-security-dir' are valid."
 
 Setting to use IPython profile named \"YOUR-IPYTHON-PROFILE\"::
 
-    (setq ein:console-args '(\"--profile\" \"YOUR-IPYTHON-PROFILE\"))
+    (setq ein2:console-args '(\"--profile\" \"YOUR-IPYTHON-PROFILE\"))
 
-Together with `ein:console-security-dir', you can open IPython
+Together with `ein2:console-security-dir', you can open IPython
 console connecting to a remote kernel.::
 
-    (setq ein:console-args '(\"--ssh\" \"HOSTNAME\"))
-    (setq ein:console-security-dir \"PATH/TO/SECURITY/DIR\")
+    (setq ein2:console-args '(\"--ssh\" \"HOSTNAME\"))
+    (setq ein2:console-security-dir \"PATH/TO/SECURITY/DIR\")
 
-You can setup `ein:console-args' per server basis using alist form::
+You can setup `ein2:console-args' per server basis using alist form::
 
-    (setq ein:console-args
+    (setq ein2:console-args
           '((8888 . '(\"--profile\" \"PROFILE\"))
             (8889 . '(\"--ssh\" \"HOSTNAME\"))
             (default . '(\"--profile\" \"default\"))))
 
 If you want to use more complex setting, you can set a function to it::
 
-    (setq ein:console-args
+    (setq ein2:console-args
           (lambda (url-or-port) '(\"--ssh\" \"HOSTNAME\")))
 
-See also: `ein:console-security-dir'."
+See also: `ein2:console-security-dir'."
   :type '(choice
           (repeat (string :tag "Arguments to IPython" "--profile"))
           (alist :tag "Arguments mapping"
@@ -144,51 +144,51 @@ See also: `ein:console-security-dir'."
                       (list "--ssh" (format "%s" url-or-port)))))
   :group 'ein)
 
-(defun ein:console-security-dir-get (url-or-port)
-  (let ((dir (ein:choose-setting 'ein:console-security-dir url-or-port)))
+(defun ein2:console-security-dir-get (url-or-port)
+  (let ((dir (ein2:choose-setting 'ein2:console-security-dir url-or-port)))
     (if (equal dir "")
         dir
     (file-name-as-directory (expand-file-name dir)))))
 
-(defun ein:console-executable-get (url-or-port)
-  (ein:choose-setting 'ein:console-executable url-or-port))
+(defun ein2:console-executable-get (url-or-port)
+  (ein2:choose-setting 'ein2:console-executable url-or-port))
 
-(defun ein:console-args-get (url-or-port)
-  (ein:choose-setting 'ein:console-args url-or-port
+(defun ein2:console-args-get (url-or-port)
+  (ein2:choose-setting 'ein2:console-args url-or-port
                       (lambda (x)
                         (or (stringp x)
                             (and (listp x)
                                  (stringp (car x)))))))
 
-(defun ein:console-make-command ()
+(defun ein2:console-make-command ()
   ;; FIXME: use %connect_info to get connection file, then I can get
-  ;; rid of `ein:console-security-dir'.
-  (let* ((url-or-port (or (ein:get-url-or-port)
+  ;; rid of `ein2:console-security-dir'.
+  (let* ((url-or-port (or (ein2:get-url-or-port)
                           (error "Cannot find notebook to connect!")))
-         (dir (ein:console-security-dir-get url-or-port))
-         (kid (ein:kernel-id (ein:get-kernel)))
-         (ipy (ein:console-executable-get url-or-port))
-         (args (ein:console-args-get url-or-port)))
+         (dir (ein2:console-security-dir-get url-or-port))
+         (kid (ein2:kernel-id (ein2:get-kernel)))
+         (ipy (ein2:console-executable-get url-or-port))
+         (args (ein2:console-args-get url-or-port)))
     ;; FIMXE: do I need "python" here?
     (append (list "python" ipy "console" "--existing"
                   (format "%skernel-%s.json" dir kid))
             (if (listp args)
                 args
-              (ein:display-warning-once
-               "String value for `ein:console-args' is obsolete.
+              (ein2:display-warning-once
+               "String value for `ein2:console-args' is obsolete.
 Use list of string instead of space separated string.")
               (split-string-and-unquote args)))))
 
-(defun ein:console-get-buffer ()
-  (let ((url-or-port (ein:get-url-or-port))
-        (notebook (ein:get-notebook)))
-    (format "*ein:console %s/%s*" url-or-port (ein:notebook-name notebook))))
+(defun ein2:console-get-buffer ()
+  (let ((url-or-port (ein2:get-url-or-port))
+        (notebook (ein2:get-notebook)))
+    (format "*ein2:console %s/%s*" url-or-port (ein2:notebook-name notebook))))
 
 ;;;###autoload
-(defun ein:console-open ()
+(defun ein2:console-open ()
   "Open IPython console.
-To use this function, `ein:console-security-dir' and
-`ein:console-args' must be set properly.
+To use this function, `ein2:console-security-dir' and
+`ein2:console-args' must be set properly.
 This function works best with the new python.el_ which is shipped
 with Emacs 24.2 or later.  If you don't have it, this function
 opens a \"plain\" command line interpreter (comint) buffer where
@@ -199,7 +199,7 @@ It should be possible to support python-mode.el.  Patches are welcome!
   (interactive)
   (if (fboundp 'python-shell-switch-to-shell)
       (let ((cmd (mapconcat #'shell-quote-argument
-                            (ein:console-make-command) " "))
+                            (ein2:console-make-command) " "))
             ;; python.el settings:
             (python-shell-setup-codes nil)
             ;; python.el makes dedicated process when
@@ -212,12 +212,12 @@ It should be possible to support python-mode.el.  Patches are welcome!
         (python-shell-make-comint cmd (python-shell-get-process-name t))
         ;; Pop to inferior Python process buffer
         (python-shell-switch-to-shell))
-    (let* ((command (ein:console-make-command))
+    (let* ((command (ein2:console-make-command))
            (program (car command))
            (args (cdr command))
-           (buffer (ein:console-get-buffer)))
+           (buffer (ein2:console-get-buffer)))
       (apply #'make-comint-in-buffer
-             "ein:console" buffer program nil args)
+             "ein2:console" buffer program nil args)
       (pop-to-buffer buffer))))
 
 (provide 'ein-console)

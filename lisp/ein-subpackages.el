@@ -25,30 +25,30 @@
 
 ;;; Code:
 
-(eval-when-compile (defvar ein:ac-config-once-called)
-                   (defvar ein:smartrep-config-once-called))
+(eval-when-compile (defvar ein2:ac-config-once-called)
+                   (defvar ein2:smartrep-config-once-called))
 
-(declare-function ein:ac-config-once "ein-ac")
-(declare-function ein:smartrep-config-once "ein-smartrep")
+(declare-function ein2:ac-config-once "ein-ac")
+(declare-function ein2:smartrep-config-once "ein-smartrep")
 
 
-(defcustom ein:use-auto-complete nil
+(defcustom ein2:use-auto-complete nil
   "Set to `t' to use preset auto-complete configuration.
-Use `ein:use-auto-complete-superpack' when you need more powerful
+Use `ein2:use-auto-complete-superpack' when you need more powerful
 auto completion."
   :type 'boolean
   :group 'ein)
 
-(defcustom ein:use-auto-complete-superpack nil
+(defcustom ein2:use-auto-complete-superpack nil
   "Set to `t' to use preset a little bit hacky auto-complete configuration.
 When this option is enabled, cached omni completion is available."
   :type 'boolean
   :group 'ein)
 
-(defcustom ein:use-smartrep nil
+(defcustom ein2:use-smartrep nil
   "Set to `t' to use preset smartrep configuration.
 
-.. warning:: When used with MuMaMo (see `ein:notebook-modes'),
+.. warning:: When used with MuMaMo (see `ein2:notebook-modes'),
    keyboard macro which manipulates cell (add, remove, move,
    etc.) may start infinite loop (you need to stop it with
    ``C-g``).  Please be careful using this option if you are a
@@ -61,29 +61,29 @@ When this option is enabled, cached omni completion is available."
   :type 'boolean
   :group 'ein)
 
-(defcustom ein:load-dev nil
+(defcustom ein2:load-dev nil
   "Load development helper."
   :type 'boolean
   :group 'ein)
 
-(defun ein:subpackages-load ()
+(defun ein2:subpackages-load ()
   "Load sub-packages depending on configurations."
-  (when (or ein:use-auto-complete
-            ein:use-auto-complete-superpack)
+  (when (or ein2:use-auto-complete
+            ein2:use-auto-complete-superpack)
     (require 'ein-ac)
-    (ein:ac-config-once ein:use-auto-complete-superpack))
-  (when ein:use-smartrep
+    (ein2:ac-config-once ein2:use-auto-complete-superpack))
+  (when ein2:use-smartrep
     (require 'ein-smartrep)
-    (ein:smartrep-config-once))
-  (when ein:load-dev
+    (ein2:smartrep-config-once))
+  (when ein2:load-dev
     (require 'ein-dev)))
 
-(defun ein:subpackages-reload ()
+(defun ein2:subpackages-reload ()
   "Reload sub-packages."
   (interactive)
-  (setq ein:ac-config-once-called nil)
-  (setq ein:smartrep-config-once-called nil)
-  (ein:subpackages-load))
+  (setq ein2:ac-config-once-called nil)
+  (setq ein2:smartrep-config-once-called nil)
+  (ein2:subpackages-load))
 
 (provide 'ein-subpackages)
 

@@ -32,20 +32,20 @@
 
 ;;; Macros and core functions/variables
 
-(defmacro ein:aif (test-form then-form &rest else-forms)
+(defmacro ein2:aif (test-form then-form &rest else-forms)
   "Anaphoric IF.  Adapted from `e2wm:aif'."
   (declare (debug (form form &rest form)))
   `(let ((it ,test-form))
      (if it ,then-form ,@else-forms)))
-(put 'ein:aif 'lisp-indent-function 2)
+(put 'ein2:aif 'lisp-indent-function 2)
 
-(defmacro ein:aand (test &rest rest)
+(defmacro ein2:aand (test &rest rest)
   "Anaphoric AND.  Adapted from `e2wm:aand'."
   (declare (debug (form &rest form)))
   `(let ((it ,test))
-     (if it ,(if rest (macroexpand-all `(ein:aand ,@rest)) 'it))))
+     (if it ,(if rest (macroexpand-all `(ein2:aand ,@rest)) 'it))))
 
-(defmacro ein:and-let* (bindings &rest form)
+(defmacro ein2:and-let* (bindings &rest form)
   "Gauche's `and-let*'."
   (declare (debug ((&rest &or symbolp (form) (gate symbolp &optional form))
                    body))
@@ -55,13 +55,13 @@
       `(progn ,@form)
     (let* ((head (car bindings))
            (tail (cdr bindings))
-           (rest (macroexpand-all `(ein:and-let* ,tail ,@form))))
+           (rest (macroexpand-all `(ein2:and-let* ,tail ,@form))))
       (cond
        ((symbolp head) `(if ,head ,rest))
        ((= (length head) 1) `(if ,(car head) ,rest))
        (t `(let (,head) (if ,(car head) ,rest)))))))
 
-(defmacro ein:deflocal (name &optional initvalue docstring)
+(defmacro ein2:deflocal (name &optional initvalue docstring)
   "Define permanent buffer local variable named NAME.
 INITVALUE and DOCSTRING are passed to `defvar'."
   (declare (indent defun)
@@ -71,7 +71,7 @@ INITVALUE and DOCSTRING are passed to `defvar'."
      (make-variable-buffer-local ',name)
      (put ',name 'permanent-local t)))
 
-(defmacro ein:with-read-only-buffer (buffer &rest body)
+(defmacro ein2:with-read-only-buffer (buffer &rest body)
   (declare (indent 1))
   `(with-current-buffer ,buffer
      (setq buffer-read-only t)
@@ -79,14 +79,14 @@ INITVALUE and DOCSTRING are passed to `defvar'."
        (let ((inhibit-read-only t))
          ,@body))))
 
-(defmacro ein:with-live-buffer (buffer &rest body)
+(defmacro ein2:with-live-buffer (buffer &rest body)
   "Execute BODY in BUFFER if BUFFER is alive."
   (declare (indent 1) (debug t))
   `(when (buffer-live-p ,buffer)
      (with-current-buffer ,buffer
        ,@body)))
 
-(defmacro ein:with-possibly-killed-buffer (buffer &rest body)
+(defmacro ein2:with-possibly-killed-buffer (buffer &rest body)
   "Execute BODY in BUFFER if BUFFER is live.
 Execute BODY if BUFFER is not live anyway."
   (declare (indent 1) (debug t))
@@ -95,14 +95,14 @@ Execute BODY if BUFFER is not live anyway."
          ,@body)
      ,@body))
 
-(defvar ein:dotty-syntax-table
+(defvar ein2:dotty-syntax-table
   (let ((table (make-syntax-table c-mode-syntax-table)))
     (modify-syntax-entry ?. "w" table)
     (modify-syntax-entry ?_ "w" table)
     table)
   "Adapted from `python-dotty-syntax-table'.")
 
-(defun ein:object-at-point ()
+(defun ein2:object-at-point ()
   "Return dotty.words.at.point.
 When region is active, text in region is returned after trimmed
 white spaces, newlines and dots.
@@ -113,36 +113,36 @@ before previous opening parenthesis."
   ;; another function or add option to this function when the auto
   ;; popup tooltip is implemented.
   (if (region-active-p)
-      (ein:trim (buffer-substring (region-beginning) (region-end))
+      (ein2:trim (buffer-substring (region-beginning) (region-end))
                 "\\s-\\|\n\\|\\.")
     (save-excursion
-      (with-syntax-table ein:dotty-syntax-table
-        (ein:aif (thing-at-point 'word)
+      (with-syntax-table ein2:dotty-syntax-table
+        (ein2:aif (thing-at-point 'word)
             it
           (unless (looking-at "(")
             (search-backward "(" (point-at-bol) t))
           (thing-at-point 'word))))))
 
-(defun ein:object-at-point-or-error ()
-  (or (ein:object-at-point) (error "No object found at the point")))
+(defun ein2:object-at-point-or-error ()
+  (or (ein2:object-at-point) (error "No object found at the point")))
 
 
 ;;; URL utils
 
-(defvar ein:url-localhost "127.0.0.1")
-(defvar ein:url-localhost-template "http://127.0.0.1:%s")
+(defvar ein2:url-localhost "127.0.0.1")
+(defvar ein2:url-localhost-template "http://127.0.0.1:%s")
 
-(defun ein:url (url-or-port &rest paths)
+(defun ein2:url (url-or-port &rest paths)
   (loop with url = (if (integerp url-or-port)
-                       (format ein:url-localhost-template url-or-port)
+                       (format ein2:url-localhost-template url-or-port)
                      url-or-port)
         for p in paths
-        do (setq url (concat (ein:trim-right url "/")
+        do (setq url (concat (ein2:trim-right url "/")
                              "/"
-                             (ein:trim-left p "/")))
+                             (ein2:trim-left p "/")))
         finally return url))
 
-(defun ein:url-no-cache (url)
+(defun ein2:url-no-cache (url)
   "Imitate `cache=false' of `jQuery.ajax'.
 See: http://api.jquery.com/jQuery.ajax/"
   (concat url (format-time-string "?_=%s")))
@@ -150,7 +150,7 @@ See: http://api.jquery.com/jQuery.ajax/"
 
 ;;; HTML utils
 
-(defun ein:html-get-data-in-body-tag (key)
+(defun ein2:html-get-data-in-body-tag (key)
   "Very ad-hoc parser to get data in body tag."
   (ignore-errors
     (save-excursion
@@ -162,12 +162,12 @@ See: http://api.jquery.com/jQuery.ajax/"
 
 ;;; JSON utils
 
-(defmacro ein:with-json-setting (&rest body)
+(defmacro ein2:with-json-setting (&rest body)
   `(let ((json-object-type 'plist)
          (json-array-type 'list))
      ,@body))
 
-(defun ein:json-read ()
+(defun ein2:json-read ()
   "Read json from `url-retrieve'-ed buffer.
 
 * `json-object-type' is `plist'. This is mainly for readability.
@@ -175,17 +175,17 @@ See: http://api.jquery.com/jQuery.ajax/"
   data type must be edit-friendly.  `vector' type is not."
   (goto-char (point-max))
   (backward-sexp)
-  (ein:with-json-setting
+  (ein2:with-json-setting
    (json-read)))
 
-(defun ein:json-read-from-string (string)
-  (ein:with-json-setting
+(defun ein2:json-read-from-string (string)
+  (ein2:with-json-setting
    (json-read-from-string string)))
 
-(defun ein:json-any-to-bool (obj)
+(defun ein2:json-any-to-bool (obj)
   (if (and obj (not (eq obj json-false))) t json-false))
 
-(defun ein:json-encode-char (char)
+(defun ein2:json-encode-char (char)
   "Fixed `json-encode-char'."
   (setq char (json-encode-char0 char 'ucs))
   (let ((control-char (car (rassoc char json-special-chars))))
@@ -200,19 +200,19 @@ See: http://api.jquery.com/jQuery.ajax/"
      (t
       (format "\\u%04x" char)))))
 
-(defadvice json-encode-char (around ein:json-encode-char (char) activate)
-  "Replace `json-encode-char' with `ein:json-encode-char'."
-  (setq ad-return-value (ein:json-encode-char char)))
+(defadvice json-encode-char (around ein2:json-encode-char (char) activate)
+  "Replace `json-encode-char' with `ein2:json-encode-char'."
+  (setq ad-return-value (ein2:json-encode-char char)))
 
 
 ;;; EWOC
 
-(defun ein:ewoc-create (pretty-printer &optional header footer nosep)
+(defun ein2:ewoc-create (pretty-printer &optional header footer nosep)
   "Do nothing wrapper of `ewoc-create' to provide better error message."
   (condition-case nil
       (ewoc-create pretty-printer header footer nosep)
     ((debug wrong-number-of-arguments)
-     (ein:display-warning "Incompatible EOWC version.
+     (ein2:display-warning "Incompatible EOWC version.
   The version of ewoc.el you are using is too old for EIN.
   Please install the newer version.
   See also: https://github.com/tkf/emacs-ipython-notebook/issues/49")
@@ -221,56 +221,56 @@ See: http://api.jquery.com/jQuery.ajax/"
 
 ;;; Text property
 
-(defun ein:propertize-read-only (string &rest properties)
+(defun ein2:propertize-read-only (string &rest properties)
   (apply #'propertize string 'read-only t 'front-sticky t properties))
 
-(defun ein:insert-read-only (string &rest properties)
-  (insert (apply #'ein:propertize-read-only string properties)))
+(defun ein2:insert-read-only (string &rest properties)
+  (insert (apply #'ein2:propertize-read-only string properties)))
 
 
 ;;; String manipulation
 
-(defun ein:trim (string &optional regexp)
-  (ein:trim-left (ein:trim-right string regexp) regexp))
+(defun ein2:trim (string &optional regexp)
+  (ein2:trim-left (ein2:trim-right string regexp) regexp))
 
-(defun ein:trim-left (string &optional regexp)
+(defun ein2:trim-left (string &optional regexp)
   (unless regexp (setq regexp "\\s-\\|\n"))
-  (ein:trim-regexp string (format "^\\(%s\\)+" regexp)))
+  (ein2:trim-regexp string (format "^\\(%s\\)+" regexp)))
 
-(defun ein:trim-right (string &optional regexp)
+(defun ein2:trim-right (string &optional regexp)
   (unless regexp (setq regexp "\\s-\\|\n"))
-  (ein:trim-regexp string (format "\\(%s\\)+$" regexp)))
+  (ein2:trim-regexp string (format "\\(%s\\)+$" regexp)))
 
-(defun ein:trim-regexp (string regexp)
+(defun ein2:trim-regexp (string regexp)
   (if (string-match regexp string)
       (replace-match "" t t string)
     string))
 
-(defun ein:trim-indent (string)
+(defun ein2:trim-indent (string)
   "Strip uniform amount of indentation from lines in STRING."
   (let* ((lines (split-string string "\n"))
          (indent
           (let ((lens
                  (loop for line in lines
-                       for stripped = (ein:trim-left line)
+                       for stripped = (ein2:trim-left line)
                        unless (equal stripped "")
                        collect (- (length line) (length stripped)))))
-            (if lens (apply #'ein:min lens) 0)))
+            (if lens (apply #'ein2:min lens) 0)))
          (trimmed
           (loop for line in lines
                 if (> (length line) indent)
-                collect (ein:trim-right (substring line indent))
+                collect (ein2:trim-right (substring line indent))
                 else
                 collect line)))
-    (ein:join-str "\n" trimmed)))
+    (ein2:join-str "\n" trimmed)))
 
-(defun ein:join-str (sep strings)
+(defun ein2:join-str (sep strings)
   (mapconcat 'identity strings sep))
 
-(defun ein:join-path (paths)
+(defun ein2:join-path (paths)
   (mapconcat 'file-name-as-directory paths ""))
 
-(defun ein:string-fill-paragraph (string &optional justify)
+(defun ein2:string-fill-paragraph (string &optional justify)
   (with-temp-buffer
     (erase-buffer)
     (insert string)
@@ -278,7 +278,7 @@ See: http://api.jquery.com/jQuery.ajax/"
     (fill-paragraph justify)
     (buffer-string)))
 
-(defmacro ein:case-equal (str &rest clauses)
+(defmacro ein2:case-equal (str &rest clauses)
   "Similar to `case' but comparison is done by `equal'.
 Adapted from twittering-mode.el's `case-string'."
   (declare (indent 1))
@@ -297,7 +297,7 @@ Adapted from twittering-mode.el's `case-string'."
 
 ;;; Text manipulation on buffer
 
-(defun ein:find-leftmot-column (beg end)
+(defun ein2:find-leftmot-column (beg end)
   "Return the leftmost column in region BEG to END."
   (save-excursion
     (let (mincol)
@@ -309,15 +309,15 @@ Adapted from twittering-mode.el's `case-string'."
                            (min mincol (current-column))
                          (current-column))))
         (unless (= (forward-line 1) 0)
-          (return-from ein:find-leftmot-column mincol)))
+          (return-from ein2:find-leftmot-column mincol)))
       mincol)))
 
 
 ;;; Misc
 
-(defun ein:plist-iter (plist)
+(defun ein2:plist-iter (plist)
   "Return list of (key . value) in PLIST."
-  ;; FIXME: this is not needed.  See: `ein:plist-exclude'.
+  ;; FIXME: this is not needed.  See: `ein2:plist-exclude'.
   (loop for p in plist
         for i from 0
         for key-p = (= (% i 2) 0)
@@ -325,37 +325,37 @@ Adapted from twittering-mode.el's `case-string'."
         if key-p do (setq key p)
         else collect `(,key . ,p)))
 
-(defun ein:plist-exclude (plist keys)
+(defun ein2:plist-exclude (plist keys)
   "Exclude entries specified by KEYS in PLIST.
 
 Example::
 
-    (ein:plist-exclude '(:a 1 :b 2 :c 3 :d 4) '(:b :c))"
+    (ein2:plist-exclude '(:a 1 :b 2 :c 3 :d 4) '(:b :c))"
   (loop for (k v) on plist by 'cddr
         unless (memq k keys)
         nconc (list k v)))
 
-(defun ein:hash-keys (table)
+(defun ein2:hash-keys (table)
   (let (keys)
     (maphash (lambda (k v) (push k keys)) table)
     keys))
 
-(defun ein:hash-vals (table)
+(defun ein2:hash-vals (table)
   (let (vals)
     (maphash (lambda (k v) (push v vals)) table)
     vals))
 
-(defun ein:filter (predicate sequence)
+(defun ein2:filter (predicate sequence)
   (loop for item in sequence
         when (funcall predicate item)
         collect item))
 
-(defun ein:clip-list (list first last)
+(defun ein2:clip-list (list first last)
   "Return elements in region of the LIST specified by FIRST and LAST element.
 
 Example::
 
-    (ein:clip-list '(1 2 3 4 5 6) 2 4)  ;=> (2 3 4)"
+    (ein2:clip-list '(1 2 3 4 5 6) 2 4)  ;=> (2 3 4)"
   (loop for elem in list
         with clipped
         with in-region-p = nil
@@ -366,18 +366,18 @@ Example::
         when (eq elem last)
         return (reverse clipped)))
 
-(defun* ein:list-insert-after (list pivot new &key (test #'eq))
+(defun* ein2:list-insert-after (list pivot new &key (test #'eq))
   "Insert NEW after PIVOT in LIST destructively.
-Note: do not rely on that `ein:list-insert-after' change LIST in place.
+Note: do not rely on that `ein2:list-insert-after' change LIST in place.
 Elements are compared using the function TEST (default: `eq')."
   (loop for rest on list
         when (funcall test (car rest) pivot)
         return (progn (push new (cdr rest)) list)
         finally do (error "PIVOT %S is not in LIST %S" pivot list)))
 
-(defun* ein:list-insert-before (list pivot new &key (test #'eq))
+(defun* ein2:list-insert-before (list pivot new &key (test #'eq))
   "Insert NEW before PIVOT in LIST destructively.
-Note: do not rely on that `ein:list-insert-before' change LIST in place.
+Note: do not rely on that `ein2:list-insert-before' change LIST in place.
 Elements are compared using the function TEST (default: `eq')."
   (if (and list (funcall test (car list) pivot))
       (cons new list)
@@ -386,7 +386,7 @@ Elements are compared using the function TEST (default: `eq')."
           return (progn (push new (cdr rest)) list)
           finally do (error "PIVOT %S is not in LIST %S" pivot list))))
 
-(defun* ein:list-move-left (list elem &key (test #'eq))
+(defun* ein2:list-move-left (list elem &key (test #'eq))
   "Move ELEM in LIST left.  TEST is used to compare elements"
   (macrolet ((== (a b) `(funcall test ,a ,b)))
     (cond
@@ -401,7 +401,7 @@ Elements are compared using the function TEST (default: `eq')."
                      list)
             finally do (error "ELEM %S is not in LIST %S" elem list))))))
 
-(defun* ein:list-move-right (list elem &key (test #'eq))
+(defun* ein2:list-move-right (list elem &key (test #'eq))
   "Move ELEM in LIST right.  TEST is used to compare elements"
   (loop with first = t
         for rest on list
@@ -419,14 +419,14 @@ Elements are compared using the function TEST (default: `eq')."
         for rest-1 = rest
         do (setq first nil)))
 
-(defun ein:get-value (obj)
+(defun ein2:get-value (obj)
   "Get value from obj if it is a variable or function."
   (cond
    ((not (symbolp obj)) obj)
    ((boundp obj) (eval obj))
    ((fboundp obj) (funcall obj))))
 
-(defun ein:choose-setting (symbol value &optional single-p)
+(defun ein2:choose-setting (symbol value &optional single-p)
   "Choose setting in stored in SYMBOL based on VALUE.
 The value of SYMBOL can be string, alist or function.
 SINGLE-P is a function which takes one argument.  It must
@@ -437,25 +437,25 @@ SINGLE-P is `stringp' by default."
      ((funcall (or single-p 'stringp) setting) setting)
      ((functionp setting) (funcall setting value))
      ((listp setting)
-      (ein:get-value (or (assoc-default value setting)
+      (ein2:get-value (or (assoc-default value setting)
                          (assoc-default 'default setting))))
      (t (error "Unsupported type of `%s': %s" symbol (type-of setting))))))
 
-(defmacro ein:setf-default (place val)
+(defmacro ein2:setf-default (place val)
   "Set VAL to PLACE using `setf' if the value of PLACE is `nil'."
   `(unless ,place
      (setf ,place ,val)))
 
-(defun ein:funcall-packed (func-arg &rest args)
+(defun ein2:funcall-packed (func-arg &rest args)
   "Call \"packed\" function.
 FUNC-ARG is a `cons' of the form: (FUNC ARG).
 FUNC is called as (apply FUNC ARG ARGS)."
   (apply (car func-arg) (cdr func-arg) args))
 
-(defun ein:eval-if-bound (symbol)
+(defun ein2:eval-if-bound (symbol)
   (if (boundp symbol) (eval symbol)))
 
-(defun ein:remove-by-index (list indices)
+(defun ein2:remove-by-index (list indices)
   "Remove elements from LIST if its index is in INDICES.
 NOTE: This function creates new list."
   (loop for l in list
@@ -463,14 +463,14 @@ NOTE: This function creates new list."
         when (not (memq i indices))
         collect l))
 
-(defun ein:min (x &rest xs)
+(defun ein2:min (x &rest xs)
   (loop for y in xs if (< y x) do (setq x y))
   x)
 
-(defun ein:do-nothing (&rest -ignore-)
+(defun ein2:do-nothing (&rest -ignore-)
   "A function which can take any number of variables and do nothing.")
 
-(defun ein:ask-choice-char (prompt choices)
+(defun ein2:ask-choice-char (prompt choices)
   "Show PROMPT and read one of acceptable key specified as CHOICES."
   (let ((char-list (loop for i from 0 below (length choices)
                          collect (elt choices i)))
@@ -495,33 +495,33 @@ NOTE: This function creates new list."
     answer))
 
 
-(defun ein:truncate-lines-on ()
+(defun ein2:truncate-lines-on ()
   "Set `truncate-lines' on (set it to `t')."
   (setq truncate-lines t))
 
 
 ;;; Emacs utilities
 
-(defun ein:display-warning (message &optional level)
+(defun ein2:display-warning (message &optional level)
   "Simple wrapper around `display-warning'.
 LEVEL must be one of :emergency, :error or :warning (default).
 This must be used only for notifying user.
-Use `ein:log' for debugging and logging."
+Use `ein2:log' for debugging and logging."
   ;; FIXME: Probably set BUFFER-NAME per notebook?
-  ;; FIXME: Call `ein:log' here (but do not display in minibuffer).
+  ;; FIXME: Call `ein2:log' here (but do not display in minibuffer).
   (display-warning 'ein message level))
 
-(defvar ein:display-warning-once--db
+(defvar ein2:display-warning-once--db
   (make-hash-table :test 'equal))
 
-(defun ein:display-warning-once (message &optional level)
-  "Call `ein:display-warning' once for same MESSAGE and LEVEL."
+(defun ein2:display-warning-once (message &optional level)
+  "Call `ein2:display-warning' once for same MESSAGE and LEVEL."
   (let ((key (list message level)))
-    (unless (gethash key ein:display-warning-once--db)
-      (ein:display-warning message level)
-      (puthash key t ein:display-warning-once--db))))
+    (unless (gethash key ein2:display-warning-once--db)
+      (ein2:display-warning message level)
+      (puthash key t ein2:display-warning-once--db))))
 
-(defun ein:get-docstring (function)
+(defun ein2:get-docstring (function)
   "Return docstring of FUNCTION."
   ;; Borrowed from `ac-symbol-documentation'.
   (with-temp-buffer
@@ -534,16 +534,16 @@ Use `ein:log' for debugging and logging."
       (describe-function-1 function))
     (buffer-string)))
 
-(defun ein:generate-menu (list-name-callback)
+(defun ein2:generate-menu (list-name-callback)
   (mapcar (lambda (name-callback)
             (destructuring-bind (name callback &rest args) name-callback
-              `[,name ,callback :help ,(ein:get-docstring callback) ,@args]))
+              `[,name ,callback :help ,(ein2:get-docstring callback) ,@args]))
           list-name-callback))
 
 
 ;;; Git utilities
 
-(defun ein:call-process (command &optional args)
+(defun ein2:call-process (command &optional args)
   "Call COMMAND with ARGS and return its stdout as string or
 `nil' if COMMAND fails.  It also checks if COMMAND executable
 exists or not."
@@ -553,31 +553,31 @@ exists or not."
          (= (apply #'call-process command nil t nil args) 0)
          (buffer-string))))
 
-(defun ein:git-root-p (&optional dir)
+(defun ein2:git-root-p (&optional dir)
   "Return `t' when DIR is root of git repository."
   (file-directory-p (expand-file-name ".git" (or dir default-directory))))
 
-(defun ein:git-dirty-p ()
+(defun ein2:git-dirty-p ()
   "Return `t' if the current directory is in git repository and it is dirty."
-  (not (equal (ein:call-process
+  (not (equal (ein2:call-process
                "git" '("--no-pager" "status" "--porcelain"))
               "")))
 
-(defun ein:git-revision ()
+(defun ein2:git-revision ()
   "Return abbreviated git revision if the current directory is in
 git repository."
-  (ein:call-process "git" '("--no-pager" "log" "-n1" "--format=format:%h")))
+  (ein2:call-process "git" '("--no-pager" "log" "-n1" "--format=format:%h")))
 
-(defun ein:git-revision-dirty ()
-  "Return `ein:git-revision' + \"-dirty\" suffix if the current
+(defun ein2:git-revision-dirty ()
+  "Return `ein2:git-revision' + \"-dirty\" suffix if the current
 directory is in a dirty git repository."
-  (ein:aand (ein:git-revision)
-            (concat it (if (ein:git-dirty-p) "-dirty" ""))))
+  (ein2:aand (ein2:git-revision)
+            (concat it (if (ein2:git-dirty-p) "-dirty" ""))))
 
 
 ;;; utils.js compatible
 
-(defun ein:utils-uuid ()
+(defun ein2:utils-uuid ()
   "Return string with random (version 4) UUID.
 Adapted from org-mode's `org-id-uuid'."
   (let ((rnd (md5 (format "%s%s%s%s%s%s%s"

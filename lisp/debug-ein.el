@@ -1,4 +1,4 @@
-;;; debug-ein.el --- Debug ein.el
+;;; debug-ein2.el --- Debug ein2.el
 
 ;; Copyright (C) 2012- Takafumi Arakaki
 
@@ -6,31 +6,31 @@
 
 ;; This file is NOT part of GNU Emacs.
 
-;; debug-ein.el is free software: you can redistribute it and/or modify
+;; debug-ein2.el is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
 
-;; debug-ein.el is distributed in the hope that it will be useful,
+;; debug-ein2.el is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with debug-ein.el.  If not, see <http://www.gnu.org/licenses/>.
+;; along with debug-ein2.el.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
-;; emacs -Q -L path/to/nxhtml/util/ -l debug-ein.el
+;; emacs -Q -L path/to/nxhtml/util/ -l debug-ein2.el
 
 ;;; Code:
 
 (add-to-list 'load-path (file-name-directory load-file-name))
 (require 'ein2)
-(require 'ein-dev)
+(require 'ein2-dev)
 
-(ein:dev-start-debug)
-(ein:notebooklist-open)
+(ein2:dev-start-debug)
+(ein2:notebooklist-open)
 
 
 ;;; Extra stuff
@@ -38,15 +38,15 @@
 (require 'markdown-mode nil t)
 (require 'rst nil t)
 
-(declare-function ein:ac-config "ein-ac")
+(declare-function ein2:ac-config "ein2-ac")
 (declare-function global-auto-complete-mode "auto-complete")
 (when (featurep 'auto-complete)
   (global-auto-complete-mode t)
-  (setq ein:use-auto-complete-superpack t))
+  (setq ein2:use-auto-complete-superpack t))
 
-(declare-function ein:smartrep-config "ein-smartrep")
+(declare-function ein2:smartrep-config "ein2-smartrep")
 (when (featurep 'smartrep)
-  (setq ein:use-smartrep t))
+  (setq ein2:use-smartrep t))
 
 (custom-set-faces
    ;; Turn off background color for mumamo major chunk, to see
@@ -68,4 +68,4 @@
     '(add-to-list 'byte-compile-not-obsolete-vars
                   'font-lock-syntactic-keywords)))
 
-;;; debug-ein.el ends here
+;;; debug-ein2.el ends here

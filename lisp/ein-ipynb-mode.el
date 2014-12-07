@@ -29,26 +29,26 @@
 (require 'ein-notebooklist)
 
 
-(defvar ein:ipynb-parent-mode 'js-mode
-  "A mode (a symbol) to use for parent mode for `ein:ipynb-mode'.
+(defvar ein2:ipynb-parent-mode 'js-mode
+  "A mode (a symbol) to use for parent mode for `ein2:ipynb-mode'.
 Note that this variable must be set *before* compiling EIN.")
 
-(defalias 'ein:ipynb-parent-mode ein:ipynb-parent-mode)
+(defalias 'ein2:ipynb-parent-mode ein2:ipynb-parent-mode)
 
 ;;;###autoload
-(define-derived-mode ein:ipynb-mode ein:ipynb-parent-mode "ein:ipynb"
+(define-derived-mode ein2:ipynb-mode ein2:ipynb-parent-mode "ein2:ipynb"
   "A simple mode for ipynb file.")
 
-(let ((map ein:ipynb-mode-map))
-  (define-key map "\C-c\C-z" 'ein:notebooklist-open-notebook-by-file-name)
-  (define-key map "\C-c\C-o" 'ein:notebooklist-open-notebook-by-file-name)
-  (easy-menu-define ein:ipynb-menu map "EIN IPyNB Mode Menu"
+(let ((map ein2:ipynb-mode-map))
+  (define-key map "\C-c\C-z" 'ein2:notebooklist-open-notebook-by-file-name)
+  (define-key map "\C-c\C-o" 'ein2:notebooklist-open-notebook-by-file-name)
+  (easy-menu-define ein2:ipynb-menu map "EIN IPyNB Mode Menu"
     `("EIN IPyNB File"
-      ,@(ein:generate-menu
-         '(("Open notebook" ein:notebooklist-open-notebook-by-file-name))))))
+      ,@(ein2:generate-menu
+         '(("Open notebook" ein2:notebooklist-open-notebook-by-file-name))))))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '(".*\\.ipynb\\'" . ein:ipynb-mode))
+(add-to-list 'auto-mode-alist '(".*\\.ipynb\\'" . ein2:ipynb-mode))
 
 
 (provide 'ein-ipynb-mode)

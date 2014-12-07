@@ -41,15 +41,15 @@
 (defgroup ein nil
   "IPython notebook client in Emacs"
   :group 'applications
-  :prefix "ein:")
+  :prefix "ein2:")
 
-(defvar ein:version "0.3"
+(defvar ein2:version "0.3"
   "Version number for Emacs IPython Notebook (EIN).")
 
 
 ;;; Configuration
 
-(defcustom ein:url-or-port '(8888)
+(defcustom ein2:url-or-port '(8888)
   "List of default url-or-port values.
 This will be used for completion. So put your IPython servers.
 You can connect to servers not in this list \(but you will need
@@ -58,15 +58,15 @@ to type every time)."
                          (string :tag "URL" "http://127.0.0.1:8888")))
   :group 'ein)
 
-(defcustom ein:default-url-or-port nil
+(defcustom ein2:default-url-or-port nil
   "Default URL or port.  This should be your main IPython
 Notebook server."
   :type '(choice (integer :tag "Port number" 8888)
                  (string :tag "URL" "http://127.0.0.1:8888")
-                 (const :tag "First value of `ein:url-or-port'" nil))
+                 (const :tag "First value of `ein2:url-or-port'" nil))
   :group 'ein)
 
-(defcustom ein:filename-translations nil
+(defcustom ein2:filename-translations nil
   "Convert file paths between Emacs and Python process.
 
 This value can take these form:
@@ -90,7 +90,7 @@ FROM-PYTHON
     A function which converts a file path returned by
     Python process to the one Emacs understands.
 
-Use `ein:tramp-create-filename-translator' to easily generate the
+Use `ein2:tramp-create-filename-translator' to easily generate the
 pair of TO-PYTHON and FROM-PYTHON."
   ;; I've got the idea from `slime-filename-translations'.
   :type '(choice
@@ -108,59 +108,59 @@ pair of TO-PYTHON and FROM-PYTHON."
 
 ;;; Constants
 
-(defvar ein:source-dir (file-name-directory load-file-name)
+(defvar ein2:source-dir (file-name-directory load-file-name)
   "Directory in which ``ein*.el`` locate.")
 
 
 ;;; Configuration getter
 
-(defun ein:default-url-or-port ()
-  (or ein:default-url-or-port (car ein:url-or-port) 8888))
+(defun ein2:default-url-or-port ()
+  (or ein2:default-url-or-port (car ein2:url-or-port) 8888))
 
-(defun ein:version ()
-  "Return a string containing `ein:version' and git revision if
+(defun ein2:version ()
+  "Return a string containing `ein2:version' and git revision if
 the source is in git repository."
-  (ein:aif (when (ein:git-root-p
-                  (concat (file-name-as-directory ein:source-dir) ".."))
-             (let ((default-directory ein:source-dir))
-               (ein:git-revision-dirty)))
-      (concat ein:version "." it)
-    ein:version))
+  (ein2:aif (when (ein2:git-root-p
+                  (concat (file-name-as-directory ein2:source-dir) ".."))
+             (let ((default-directory ein2:source-dir))
+               (ein2:git-revision-dirty)))
+      (concat ein2:version "." it)
+    ein2:version))
 
-(defun ein:query-ipython-version (&optional url-or-port)
-  (let ((resp (request (ein:url (or url-or-port
-                                    (ein:default-url-or-port))
+(defun ein2:query-ipython-version (&optional url-or-port)
+  (let ((resp (request (ein2:url (or url-or-port
+                                    (ein2:default-url-or-port))
                                 "api")
-                       :parser #'ein:json-read
+                       :parser #'ein2:json-read
                        :timeout 0.5
                        :sync t)))
     (if (eql 404 (request-response-status-code resp))
         (progn
-          (ein:log 'warn "Version api not implemented, assuming we are working with IPython 2.x")
+          (ein2:log 'warn "Version api not implemented, assuming we are working with IPython 2.x")
           2)
       (string-to-number (first (split-string (plist-get (request-response-data resp) :version) "[\\.]"))))))
 
 
 ;;; File name translation (tramp support)
 
-;; Probably it's better to define `ein:filename-translations-get' as
+;; Probably it's better to define `ein2:filename-translations-get' as
 ;; an EIEIO method so that I don't have to re-define functions such as
-;; `ein:kernel-filename-to-python' and `ein:kernel-filename-from-python'.
+;; `ein2:kernel-filename-to-python' and `ein2:kernel-filename-from-python'.
 
-(defun ein:filename-translations-get (url-or-port)
-  (ein:choose-setting 'ein:filename-translations url-or-port))
+(defun ein2:filename-translations-get (url-or-port)
+  (ein2:choose-setting 'ein2:filename-translations url-or-port))
 
-(defun ein:filename-to-python (url-or-port filename)
-  (ein:aif (car (ein:filename-translations-get url-or-port))
+(defun ein2:filename-to-python (url-or-port filename)
+  (ein2:aif (car (ein2:filename-translations-get url-or-port))
       (funcall it filename)
     filename))
 
-(defun ein:filename-from-python (url-or-port filename)
-  (ein:aif (cadr (ein:filename-translations-get url-or-port))
+(defun ein2:filename-from-python (url-or-port filename)
+  (ein2:aif (cadr (ein2:filename-translations-get url-or-port))
       (funcall it filename)
     filename))
 
-(defun ein:make-tramp-file-name (username remote-host python-filename)
+(defun ein2:make-tramp-file-name (username remote-host python-filename)
   "Old (with multi-hops) tramp compatibility function.
 Adapted from `slime-make-tramp-file-name'."
   (if (boundp 'tramp-multi-methods)
@@ -173,20 +173,20 @@ Adapted from `slime-make-tramp-file-name'."
                                 remote-host
                                 python-filename)))
 
-(defun ein:tramp-create-filename-translator (remote-host &optional username)
+(defun ein2:tramp-create-filename-translator (remote-host &optional username)
   "Generate a pair of TO-PYTHON and FROM-PYTHON for
-`ein:filename-translations'.
+`ein2:filename-translations'.
 
 Usage::
 
-    (setq ein:filename-translations
+    (setq ein2:filename-translations
           `((8888
-             . ,(ein:tramp-create-filename-translator \"MY-HOSTNAME\"))))
+             . ,(ein2:tramp-create-filename-translator \"MY-HOSTNAME\"))))
     ;; Equivalently:
-    (setq ein:filename-translations
+    (setq ein2:filename-translations
           (lambda (url-or-port)
             (when (equal url-or-port 8888)
-              (ein:tramp-create-filename-translator \"MY-HOSTNAME\"))))
+              (ein2:tramp-create-filename-translator \"MY-HOSTNAME\"))))
 
 This setting assumes that the IPython server which can be
 connected using the port 8888 in localhost is actually running in
@@ -200,14 +200,14 @@ Adapted from `slime-create-filename-translator'."
             (tramp-file-name-localname
              (tramp-dissect-file-name emacs-filename)))
           (lambda (python-filename)
-             (ein:make-tramp-file-name username remote-host python-filename)))))
+             (ein2:make-tramp-file-name username remote-host python-filename)))))
 
 
 
 ;;; Generic getter
 
-(defun ein:generic-getter (func-list)
-  "Internal function for generic getter functions (`ein:get-*').
+(defun ein2:generic-getter (func-list)
+  "Internal function for generic getter functions (`ein2:get-*').
 
 FUNC-LIST is a list of function which takes no argument and
 return what is desired or nil.  Each function in FUNC-LIST is
@@ -224,57 +224,57 @@ but can operate in different contexts."
         if (and (functionp func) (funcall func))
         return it))
 
-(defun ein:get-url-or-port ()
-  (ein:generic-getter '(ein:get-url-or-port--notebooklist
-                        ein:get-url-or-port--notebook
-                        ein:get-url-or-port--worksheet
-                        ein:get-url-or-port--shared-output
-                        ein:get-url-or-port--connect)))
+(defun ein2:get-url-or-port ()
+  (ein2:generic-getter '(ein2:get-url-or-port--notebooklist
+                        ein2:get-url-or-port--notebook
+                        ein2:get-url-or-port--worksheet
+                        ein2:get-url-or-port--shared-output
+                        ein2:get-url-or-port--connect)))
 
-(defun ein:get-notebook ()
-  (ein:generic-getter '(ein:get-notebook--notebook
-                        ;; ein:get-notebook--shared-output
-                        ein:get-notebook--connect)))
+(defun ein2:get-notebook ()
+  (ein2:generic-getter '(ein2:get-notebook--notebook
+                        ;; ein2:get-notebook--shared-output
+                        ein2:get-notebook--connect)))
 
-(defun ein:get-notebook-or-error ()
-  (or (ein:get-notebook)
+(defun ein2:get-notebook-or-error ()
+  (or (ein2:get-notebook)
       (error "No notebook related to the current buffer.")))
 
-(defun ein:get-kernel ()
-  (ein:generic-getter '(ein:get-kernel--notebook
-                        ein:get-kernel--worksheet
-                        ein:get-kernel--shared-output
-                        ein:get-kernel--connect)))
+(defun ein2:get-kernel ()
+  (ein2:generic-getter '(ein2:get-kernel--notebook
+                        ein2:get-kernel--worksheet
+                        ein2:get-kernel--shared-output
+                        ein2:get-kernel--connect)))
 
-(defun ein:get-kernel-or-error ()
-  (or (ein:get-kernel)
+(defun ein2:get-kernel-or-error ()
+  (or (ein2:get-kernel)
       (error "No kernel related to the current buffer.")))
 
-(defun ein:get-cell-at-point ()
-  (ein:generic-getter '(ein:get-cell-at-point--worksheet
-                        ein:get-cell-at-point--shared-output)))
+(defun ein2:get-cell-at-point ()
+  (ein2:generic-getter '(ein2:get-cell-at-point--worksheet
+                        ein2:get-cell-at-point--shared-output)))
 
-(defun ein:get-traceback-data ()
-  (ein:generic-getter '(ein:get-traceback-data--worksheet
-                        ein:get-traceback-data--shared-output
-                        ein:get-traceback-data--connect)))
+(defun ein2:get-traceback-data ()
+  (ein2:generic-getter '(ein2:get-traceback-data--worksheet
+                        ein2:get-traceback-data--shared-output
+                        ein2:get-traceback-data--connect)))
 
 
 
 ;;; Emacs utilities
 
-(defun ein:byte-compile-ein ()
+(defun ein2:byte-compile-ein ()
   "Byte compile EIN files."
   (interactive)
-  (let* ((files (directory-files ein:source-dir 'full "^ein-.*\\.el$"))
-         (errors (ein:filter
+  (let* ((files (directory-files ein2:source-dir 'full "^ein-.*\\.el$"))
+         (errors (ein2:filter
                   'identity
                   (mapcar (lambda (f) (unless (byte-compile-file f) f))
                           files))))
-    (ein:aif errors
+    (ein2:aif errors
         (error "Got %s errors while compiling these files: %s"
                (length errors)
-               (ein:join-str " " (mapcar #'file-name-nondirectory it))))
+               (ein2:join-str " " (mapcar #'file-name-nondirectory it))))
     (message "Compiled %s files" (length files))))
 
 

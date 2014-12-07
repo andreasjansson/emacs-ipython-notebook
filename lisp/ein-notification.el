@@ -34,14 +34,14 @@
 
 ;; Class and variable
 
-(ein:deflocal ein:%notification% nil
-  "Buffer local variable to hold an instance of `ein:notification'.")
-(define-obsolete-variable-alias 'ein:@notification 'ein:%notification% "0.1.2")
+(ein2:deflocal ein2:%notification% nil
+  "Buffer local variable to hold an instance of `ein2:notification'.")
+(define-obsolete-variable-alias 'ein2:@notification 'ein2:%notification% "0.1.2")
 
-(defvar ein:header-line-format '(:eval (ein:header-line)))
-(defvar ein:header-line-tab-map (make-sparse-keymap))
-(defvar ein:header-line-insert-tab-map (make-sparse-keymap))
-(defvar ein:header-line-tab-help
+(defvar ein2:header-line-format '(:eval (ein2:header-line)))
+(defvar ein2:header-line-tab-map (make-sparse-keymap))
+(defvar ein2:header-line-insert-tab-map (make-sparse-keymap))
+(defvar ein2:header-line-tab-help
   "\
 mouse-1 (left click) : switch to this tab
 mouse-3 (right click) : pop to this tab
@@ -49,15 +49,15 @@ mouse-2 (middle click) : delete this tab
 M-mouse-1/3 (Alt + left/right click): insert new tab to left/right
 S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
   "Help message.")
-;; Note: can't put this below of `ein:notification-setup'...
+;; Note: can't put this below of `ein2:notification-setup'...
 
-(defclass ein:notification-status ()
+(defclass ein2:notification-status ()
   ((status :initarg :status :initform nil)
    (message :initarg :message :initform nil)
    (s2m :initarg :s2m))
   "Hold status and it's string representation (message).")
 
-(defclass ein:notification-tab ()
+(defclass ein2:notification-tab ()
   ((get-list :initarg :get-list :type function)
    (get-current :initarg :get-current :type function)
    (get-name :initarg :get-name :type function)
@@ -71,83 +71,83 @@ S-mouse-1/3 (Shift + left/right click): move this tab to left/right"
   ;; These "methods" are for not depending on what the TABs for.
   ;; Probably I'd want change this to be a separated Emacs lisp
   ;; library at some point.
-  "See `ein:notification-setup' for explanation.")
+  "See `ein2:notification-setup' for explanation.")
 
-(defclass ein:notification ()
+(defclass ein2:notification ()
   ((buffer :initarg :buffer :type buffer :document "Notebook buffer")
-   (tab :initarg :tab :type ein:notification-tab)
+   (tab :initarg :tab :type ein2:notification-tab)
    (execution-count
     :initform "y" :initarg :execution-count
     :documentation "Last `execution_count' sent by `execute_reply'.")
    (notebook
     :initarg :notebook
     :initform
-    (ein:notification-status
+    (ein2:notification-status
      "NotebookStatus"
      :s2m
      '((notebook_saving.Notebook       . "Saving Notebook...")
        (notebook_saved.Notebook        . "Notebook is saved")
        (notebook_save_failed.Notebook  . "Failed to save Notebook!")))
-    :type ein:notification-status)
+    :type ein2:notification-status)
    (kernel
     :initarg :kernel
     :initform
-    (ein:notification-status
+    (ein2:notification-status
      "KernelStatus"
      :s2m
      '((status_idle.Kernel . nil)
        (status_busy.Kernel . "Kernel is busy...")
        (status_dead.Kernel . "Kernel is dead. Need restart.")))
-    :type ein:notification-status))
+    :type ein2:notification-status))
   "Notification widget for Notebook.")
 
-(defmethod ein:notification-status-set ((ns ein:notification-status) status)
+(defmethod ein2:notification-status-set ((ns ein2:notification-status) status)
   (let* ((message (cdr (assoc status (oref ns :s2m)))))
     (oset ns :status status)
     (oset ns :message message)))
 
-(defmethod ein:notification-bind-events ((notification ein:notification)
+(defmethod ein2:notification-bind-events ((notification ein2:notification)
                                          events)
   "Bind a callback to events of the event handler EVENTS which
 just set the status \(= event-type):
-    \(ein:notification-status-set NS EVENT-TYPE)
+    \(ein2:notification-status-set NS EVENT-TYPE)
 where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
   (loop for ns in (list (oref notification :kernel)
                         (oref notification :notebook))
         for statuses = (mapcar #'car (oref ns :s2m))
         do (loop for st in statuses
-                 do (ein:events-on events
+                 do (ein2:events-on events
                                    st   ; = event-type
-                                   #'ein:notification--callback
+                                   #'ein2:notification--callback
                                    (cons ns st))))
-  (ein:events-on events
+  (ein2:events-on events
                  'notebook_saved.Notebook
-                 #'ein:notification--fadeout-callback
+                 #'ein2:notification--fadeout-callback
                  (list (oref notification :notebook)
                        "Notebook is saved"
                        'notebook_saved.Notebook
                        nil))
-  (ein:events-on events
+  (ein2:events-on events
                  'execution_count.Kernel
-                 #'ein:notification--set-execution-count
+                 #'ein2:notification--set-execution-count
                  notification)
-  (ein:events-on events
+  (ein2:events-on events
                  'status_restarting.Kernel
-                 #'ein:notification--fadeout-callback
+                 #'ein2:notification--fadeout-callback
                  (list (oref notification :kernel)
                        "Restarting kernel..."
                        'status_restarting.Kernel
                        'status_idle.Kernel)))
 
-(defun ein:notification--callback (packed data)
+(defun ein2:notification--callback (packed data)
   (let ((ns (car packed))
         (status (cdr packed)))
-    (ein:notification-status-set ns status)))
+    (ein2:notification-status-set ns status)))
 
-(defun ein:notification--set-execution-count (notification count)
+(defun ein2:notification--set-execution-count (notification count)
   (oset notification :execution-count count))
 
-(defun ein:notification--fadeout-callback (packed data)
+(defun ein2:notification--fadeout-callback (packed data)
   ;; FIXME: I can simplify this.
   ;;        Do not pass around message, for exmaple.
   (let ((ns (nth 0 packed))
@@ -160,13 +160,13 @@ where NS is `:kernel' or `:notebook' slot of NOTIFICATION."
            1 nil
            (lambda (ns message status next)
              (when (equal (oref ns :status) status)
-               (ein:notification-status-set ns next)
-               ;; (ein:with-live-buffer (oref ns :buffer)
+               (ein2:notification-status-set ns next)
+               ;; (ein2:with-live-buffer (oref ns :buffer)
                ;;   (force-mode-line-update))
                ))
            packed)))
 
-(defun ein:notification-setup (buffer events &rest tab-slots)
+(defun ein2:notification-setup (buffer events &rest tab-slots)
   "Setup a new notification widget in the BUFFER.
 This function saves the new notification widget instance in the
 local variable of the BUFFER.
@@ -197,77 +197,77 @@ MOVE-PREV / MOVE-NEXT : function
 \(fn buffer events &key get-list get-current get-name get-buffer delete \
 insert-prev insert-next move-prev move-next)"
   (with-current-buffer buffer
-    (setq ein:%notification%
-          (ein:notification "NotificationWidget" :buffer buffer))
-    (setq header-line-format ein:header-line-format)
-    (ein:notification-bind-events ein:%notification% events)
-    (oset ein:%notification% :tab
-          (apply #'make-instance 'ein:notification-tab tab-slots))
-    ein:%notification%))
+    (setq ein2:%notification%
+          (ein2:notification "NotificationWidget" :buffer buffer))
+    (setq header-line-format ein2:header-line-format)
+    (ein2:notification-bind-events ein2:%notification% events)
+    (oset ein2:%notification% :tab
+          (apply #'make-instance 'ein2:notification-tab tab-slots))
+    ein2:%notification%))
 
 
 ;;; Tabs
 
-(defface ein:notification-tab-selected
+(defface ein2:notification-tab-selected
   '((t :inherit (header-line match) :underline t))
   "Face for headline selected tab."
   :group 'ein)
 
-(defface ein:notification-tab-normal
+(defface ein2:notification-tab-normal
   '((t :inherit (header-line) :underline t :height 0.8))
   "Face for headline selected tab."
   :group 'ein)
 
-(defmethod ein:notification-tab-create-line ((tab ein:notification-tab))
+(defmethod ein2:notification-tab-create-line ((tab ein2:notification-tab))
   (let ((list (funcall (oref tab :get-list)))
         (current (funcall (oref tab :get-current)))
         (get-name (oref tab :get-name)))
-    (ein:join-str
+    (ein2:join-str
      " "
      (append
       (loop for i from 1
             for elem in list
             if (eq elem current)
             collect (propertize
-                     (or (ein:and-let* ((name (funcall get-name elem)))
+                     (or (ein2:and-let* ((name (funcall get-name elem)))
                            (format "/%d: %s\\" i name))
                          (format "/%d\\" i))
-                     'ein:worksheet elem
-                     'keymap ein:header-line-tab-map
-                     'help-echo ein:header-line-tab-help
+                     'ein2:worksheet elem
+                     'keymap ein2:header-line-tab-map
+                     'help-echo ein2:header-line-tab-help
                      'mouse-face 'highlight
-                     'face 'ein:notification-tab-selected)
+                     'face 'ein2:notification-tab-selected)
             else
             collect (propertize
                      (format "/%d\\" i)
-                     'ein:worksheet elem
-                     'keymap ein:header-line-tab-map
-                     'help-echo ein:header-line-tab-help
+                     'ein2:worksheet elem
+                     'keymap ein2:header-line-tab-map
+                     'help-echo ein2:header-line-tab-help
                      'mouse-face 'highlight
-                     'face 'ein:notification-tab-normal))
+                     'face 'ein2:notification-tab-normal))
       (list
        (propertize "[+]"
-                   'keymap ein:header-line-insert-tab-map
+                   'keymap ein2:header-line-insert-tab-map
                    'help-echo "Click (mouse-1) to insert a new tab."
                    'mouse-face 'highlight
-                   'face 'ein:notification-tab-normal))))))
+                   'face 'ein2:notification-tab-normal))))))
 
 
 ;;; Header line
 
-(let ((map ein:header-line-tab-map))
-  (define-key map [header-line M-mouse-1] 'ein:header-line-insert-prev-tab)
-  (define-key map [header-line M-mouse-3] 'ein:header-line-insert-next-tab)
-  (define-key map [header-line S-mouse-1] 'ein:header-line-move-prev-tab)
-  (define-key map [header-line S-mouse-3] 'ein:header-line-move-next-tab)
-  (define-key map [header-line mouse-1] 'ein:header-line-switch-to-this-tab)
-  (define-key map [header-line mouse-2] 'ein:header-line-delete-this-tab)
-  (define-key map [header-line mouse-3] 'ein:header-line-pop-to-this-tab))
+(let ((map ein2:header-line-tab-map))
+  (define-key map [header-line M-mouse-1] 'ein2:header-line-insert-prev-tab)
+  (define-key map [header-line M-mouse-3] 'ein2:header-line-insert-next-tab)
+  (define-key map [header-line S-mouse-1] 'ein2:header-line-move-prev-tab)
+  (define-key map [header-line S-mouse-3] 'ein2:header-line-move-next-tab)
+  (define-key map [header-line mouse-1] 'ein2:header-line-switch-to-this-tab)
+  (define-key map [header-line mouse-2] 'ein2:header-line-delete-this-tab)
+  (define-key map [header-line mouse-3] 'ein2:header-line-pop-to-this-tab))
 
-(define-key ein:header-line-insert-tab-map
-  [header-line mouse-1] 'ein:header-line-insert-new-tab)
+(define-key ein2:header-line-insert-tab-map
+  [header-line mouse-1] 'ein2:header-line-insert-new-tab)
 
-(defmacro ein:with-destructuring-bind-key-event (key-event &rest body)
+(defmacro ein2:with-destructuring-bind-key-event (key-event &rest body)
   (declare (debug (form &rest form))
            (indent 1))
   ;; See: (info "(elisp) Click Events")
@@ -279,81 +279,81 @@ insert-prev insert-next move-prev move-next)"
        ,key-event
      ,@body))
 
-(defun ein:header-line-select-window (key-event)
-  (ein:with-destructuring-bind-key-event key-event (select-window window)))
+(defun ein2:header-line-select-window (key-event)
+  (ein2:with-destructuring-bind-key-event key-event (select-window window)))
 
-(defun ein:header-line-key-event-get-worksheet (key-event)
-  (ein:with-destructuring-bind-key-event key-event
-    (get-char-property (cdr object) 'ein:worksheet (car object))))
+(defun ein2:header-line-key-event-get-worksheet (key-event)
+  (ein2:with-destructuring-bind-key-event key-event
+    (get-char-property (cdr object) 'ein2:worksheet (car object))))
 
-(defun ein:header-line-key-event-get-buffer (key-event)
-  (funcall (oref (oref ein:%notification% :tab) :get-buffer)
-           (ein:header-line-key-event-get-worksheet key-event)))
+(defun ein2:header-line-key-event-get-buffer (key-event)
+  (funcall (oref (oref ein2:%notification% :tab) :get-buffer)
+           (ein2:header-line-key-event-get-worksheet key-event)))
 
-(defun ein:header-line-switch-to-this-tab (key-event)
+(defun ein2:header-line-switch-to-this-tab (key-event)
   (interactive "e")
-  (ein:header-line-select-window key-event)
-  (switch-to-buffer (ein:header-line-key-event-get-buffer key-event)))
+  (ein2:header-line-select-window key-event)
+  (switch-to-buffer (ein2:header-line-key-event-get-buffer key-event)))
 
-(defun ein:header-line-pop-to-this-tab (key-event)
+(defun ein2:header-line-pop-to-this-tab (key-event)
   (interactive "e")
-  (ein:header-line-select-window key-event)
-  (pop-to-buffer (ein:header-line-key-event-get-buffer key-event)))
+  (ein2:header-line-select-window key-event)
+  (pop-to-buffer (ein2:header-line-key-event-get-buffer key-event)))
 
-(defun ein:header-line-do-slot-function (key-event slot)
+(defun ein2:header-line-do-slot-function (key-event slot)
   "Call SLOT function on worksheet instance fetched from KEY-EVENT."
-  (ein:header-line-select-window key-event)
-  (funcall (slot-value (oref ein:%notification% :tab) slot)
-           (ein:header-line-key-event-get-worksheet key-event)))
+  (ein2:header-line-select-window key-event)
+  (funcall (slot-value (oref ein2:%notification% :tab) slot)
+           (ein2:header-line-key-event-get-worksheet key-event)))
 
-(defmacro ein:header-line-define-mouse-commands (&rest name-slot-list)
+(defmacro ein2:header-line-define-mouse-commands (&rest name-slot-list)
   `(progn
      ,@(loop for (name slot) on name-slot-list by 'cddr
              collect
              `(defun ,name (key-event)
                 ,(format "Run slot %s
-Generated by `ein:header-line-define-mouse-commands'" slot)
+Generated by `ein2:header-line-define-mouse-commands'" slot)
                 (interactive "e")
-                (ein:header-line-do-slot-function key-event ,slot)))))
+                (ein2:header-line-do-slot-function key-event ,slot)))))
 
-(ein:header-line-define-mouse-commands
- ein:header-line-delete-this-tab :delete
- ein:header-line-insert-prev-tab :insert-prev
- ein:header-line-insert-next-tab :insert-next
- ein:header-line-move-prev-tab :move-prev
- ein:header-line-move-next-tab :move-next
+(ein2:header-line-define-mouse-commands
+ ein2:header-line-delete-this-tab :delete
+ ein2:header-line-insert-prev-tab :insert-prev
+ ein2:header-line-insert-next-tab :insert-next
+ ein2:header-line-move-prev-tab :move-prev
+ ein2:header-line-move-next-tab :move-next
  )
 
-(defun ein:header-line-insert-new-tab (key-event)
+(defun ein2:header-line-insert-new-tab (key-event)
   "Insert new tab."
   (interactive "e")
-  (ein:header-line-select-window key-event)
-  (let ((notification (oref ein:%notification% :tab)))
+  (ein2:header-line-select-window key-event)
+  (let ((notification (oref ein2:%notification% :tab)))
     (funcall (oref notification :insert-next)
              (car (last (funcall (oref notification :get-list)))))))
 
-(defun ein:header-line ()
+(defun ein2:header-line ()
   (format
    "IP[%s]: %s"
-   (oref ein:%notification% :execution-count)
-   (ein:join-str
+   (oref ein2:%notification% :execution-count)
+   (ein2:join-str
     " | "
-    (ein:filter
+    (ein2:filter
      'identity
-     (list (oref (oref ein:%notification% :notebook) :message)
-           (oref (oref ein:%notification% :kernel) :message)
-           (ein:notification-tab-create-line
-            (oref ein:%notification% :tab)))))))
+     (list (oref (oref ein2:%notification% :notebook) :message)
+           (oref (oref ein2:%notification% :kernel) :message)
+           (ein2:notification-tab-create-line
+            (oref ein2:%notification% :tab)))))))
 
-(defun ein:header-line-setup-maybe ()
+(defun ein2:header-line-setup-maybe ()
   "Setup `header-line-format' for mumamo.
 As `header-line-format' is buffer local variable, it must be set
 for each chunk when in
-See also `ein:ac-setup-maybe'."
-  (and (ein:eval-if-bound 'ein:%notebook%)
-       (ein:eval-if-bound 'mumamo-multi-major-mode)
-       (setq header-line-format ein:header-line-format)))
-(add-hook 'after-change-major-mode-hook 'ein:header-line-setup-maybe)
+See also `ein2:ac-setup-maybe'."
+  (and (ein2:eval-if-bound 'ein2:%notebook%)
+       (ein2:eval-if-bound 'mumamo-multi-major-mode)
+       (setq header-line-format ein2:header-line-format)))
+(add-hook 'after-change-major-mode-hook 'ein2:header-line-setup-maybe)
 
 (provide 'ein-notification)
 

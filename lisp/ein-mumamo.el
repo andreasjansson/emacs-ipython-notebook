@@ -33,42 +33,42 @@
 
 ;;; Customization
 
-(defcustom ein:mumamo-codecell-mode 'python-mode
+(defcustom ein2:mumamo-codecell-mode 'python-mode
   "Major Mode for Code Cell."
   :type '(symbol :tag "Major Mode")
   :group 'ein)
 
-(defcustom ein:mumamo-textcell-mode 'text-mode
+(defcustom ein2:mumamo-textcell-mode 'text-mode
   "Major Mode for Text Cell."
   :type '(symbol :tag "Major Mode")
   :group 'ein)
 
-(defcustom ein:mumamo-htmlcell-mode 'html-mode
+(defcustom ein2:mumamo-htmlcell-mode 'html-mode
   "Major Mode for HTML Cell."
   :type '(symbol :tag "Major Mode")
   :group 'ein)
 
-(defcustom ein:mumamo-markdowncell-mode 'markdown-mode
+(defcustom ein2:mumamo-markdowncell-mode 'markdown-mode
   "Major Mode for Markdown Cell."
   :type '(symbol :tag "Major Mode")
   :group 'ein)
 
-(defcustom ein:mumamo-rawcell-mode 'rst-mode
+(defcustom ein2:mumamo-rawcell-mode 'rst-mode
   "Major Mode for Raw Cell."
   :type '(symbol :tag "Major Mode")
   :group 'ein)
 
-(defcustom ein:mumamo-headingcell-mode 'text-mode
+(defcustom ein2:mumamo-headingcell-mode 'text-mode
   "Major Mode for Heading Cell."
   :type '(symbol :tag "Major Mode")
   :group 'ein)
 
-(defcustom ein:mumamo-fallback-mode 'text-mode
+(defcustom ein2:mumamo-fallback-mode 'text-mode
   "Fallback Major Mode."
   :type '(symbol :tag "Major Mode")
   :group 'ein)
 
-(defcustom ein:use-mumamo-indent-line-function-workaround t
+(defcustom ein2:use-mumamo-indent-line-function-workaround t
   "Turn on workaround for `mumamo-indent-line-function'.
 
 In code cell, hitting TAB or C-j at the end of input area causes
@@ -84,7 +84,7 @@ problem."
   :type 'boolean
   :group 'ein)
 
-(defcustom ein:mumamo-indent-line-function-dummy-code "
+(defcustom ein2:mumamo-indent-line-function-dummy-code "
 def ein_dummy():
     return"
   "Dummy code block for `mumamo-indent-line-function' workaround.
@@ -109,15 +109,15 @@ To make the workaround less aggressive, you can set a newline
 ;;; Workaround
 
 (defadvice mumamo-indent-line-function
-  (around ein:mumamo-indent-line-function-workaround)
+  (around ein2:mumamo-indent-line-function-workaround)
   "Workaround the indentation problem when the cursor is in the
 code cell."
-  (let ((cell (ein:worksheet-get-current-cell)))
+  (let ((cell (ein2:worksheet-get-current-cell)))
     ;; Check if the current buffer is notebook AND the current cell is
     ;; code cell.
-    (if (ein:codecell-p cell)
+    (if (ein2:codecell-p cell)
         (let ((cur (copy-marker (point)))
-              (end (copy-marker (1+ (ein:cell-input-pos-max cell)))))
+              (end (copy-marker (1+ (ein2:cell-input-pos-max cell)))))
           ;;             v-- execute `delete-char' here
           ;; ... [] ......DUMMY
           ;;      ^- cur       ^- end (non-inclusive end of cell)
@@ -125,24 +125,24 @@ code cell."
           (unwind-protect
               (progn
                 (goto-char (1- end))
-                (insert ein:mumamo-indent-line-function-dummy-code)
+                (insert ein2:mumamo-indent-line-function-dummy-code)
                 (goto-char cur)
                 ad-do-it)
             (save-excursion
-              (let ((len (length ein:mumamo-indent-line-function-dummy-code)))
+              (let ((len (length ein2:mumamo-indent-line-function-dummy-code)))
                 (goto-char (- end 1 len))
                 (delete-char len)))))
       ad-do-it)))
 
-(defun ein:mumamo-indent-line-function-workaround-turn-on ()
+(defun ein2:mumamo-indent-line-function-workaround-turn-on ()
   "Activate advice for `mumamo-indent-line-function'.
-Called via `ein:notebook-mumamo-mode-hook'."
-  (when ein:use-mumamo-indent-line-function-workaround
+Called via `ein2:notebook-mumamo-mode-hook'."
+  (when ein2:use-mumamo-indent-line-function-workaround
     (ad-enable-advice 'mumamo-indent-line-function 'around
-                      'ein:mumamo-indent-line-function-workaround)
+                      'ein2:mumamo-indent-line-function-workaround)
     (ad-activate 'mumamo-indent-line-function)))
 
-(defun ein:mumamo-imenu-setup-maybe ()
+(defun ein2:mumamo-imenu-setup-maybe ()
   "Set `imenu-create-index-function' if the current buffer is the
 notebook buffer.
 This function is called via `after-change-major-mode-hook', to set
@@ -153,95 +153,95 @@ the variable every time visiting the different chunks.
    permanent-local in *any* buffer, including the buffers
    irrelevant to EIN.  Therefore, the current approach is taken.
 
-This is the same workaround as `ein:ac-setup-maybe'."
-  (when (ein:worksheet-buffer-p)
-    (ein:worksheet-imenu-setup)))
+This is the same workaround as `ein2:ac-setup-maybe'."
+  (when (ein2:worksheet-buffer-p)
+    (ein2:worksheet-imenu-setup)))
 
-(add-hook 'after-change-major-mode-hook 'ein:mumamo-imenu-setup-maybe)
+(add-hook 'after-change-major-mode-hook 'ein2:mumamo-imenu-setup-maybe)
 
 
 
-;;; `ein:notebook-mumamo-mode'
+;;; `ein2:notebook-mumamo-mode'
 
-(define-derived-mode ein:notebook-bg-mode fundamental-mode "ein:bg"
-  "Background mode for `ein:notebook-mumamo-mode'."
+(define-derived-mode ein2:notebook-bg-mode fundamental-mode "ein2:bg"
+  "Background mode for `ein2:notebook-mumamo-mode'."
   (setq font-lock-defaults '(nil t))
   (font-lock-mode))
 
-(define-mumamo-multi-major-mode ein:notebook-mumamo-mode
+(define-mumamo-multi-major-mode ein2:notebook-mumamo-mode
   "IPython notebook mode."
-  ("IPython notebook familiy" ein:notebook-bg-mode
-   (ein:mumamo-chunk-codecell
-    ein:mumamo-chunk-textcell
-    ein:mumamo-chunk-htmlcell
-    ein:mumamo-chunk-markdowncell
-    ein:mumamo-chunk-rawcell
-    ein:mumamo-chunk-headingcell
+  ("IPython notebook familiy" ein2:notebook-bg-mode
+   (ein2:mumamo-chunk-codecell
+    ein2:mumamo-chunk-textcell
+    ein2:mumamo-chunk-htmlcell
+    ein2:mumamo-chunk-markdowncell
+    ein2:mumamo-chunk-rawcell
+    ein2:mumamo-chunk-headingcell
     )))
 
-(add-hook 'ein:notebook-mumamo-mode-hook
-          'ein:mumamo-indent-line-function-workaround-turn-on)
+(add-hook 'ein2:notebook-mumamo-mode-hook
+          'ein2:mumamo-indent-line-function-workaround-turn-on)
 
 
 
 ;;; Chunk functions
 
-(defmacro ein:mumamo-define-chunk (name)
-  (let ((funcname (intern (format "ein:mumamo-chunk-%s" name)))
-        (mode (intern (format "ein:mumamo-%s-mode" name)))
-        (cell-p (intern (format "ein:%s-p" name))))
+(defmacro ein2:mumamo-define-chunk (name)
+  (let ((funcname (intern (format "ein2:mumamo-chunk-%s" name)))
+        (mode (intern (format "ein2:mumamo-%s-mode" name)))
+        (cell-p (intern (format "ein2:%s-p" name))))
     `(defun ,funcname (pos max)
        (mumamo-possible-chunk-forward
         pos max
         (lambda (pos max) "CHUNK-START-FUN"
-          (ein:log 'blather "CHUNK-START-FUN(pos=%s max=%s)" pos max)
-          (ein:aif (ein:mumamo-find-edge pos max nil #',cell-p)
+          (ein2:log 'blather "CHUNK-START-FUN(pos=%s max=%s)" pos max)
+          (ein2:aif (ein2:mumamo-find-edge pos max nil #',cell-p)
               (list it (if (functionp ,mode)
                            ,mode
-                         ein:mumamo-fallback-mode)
+                         ein2:mumamo-fallback-mode)
                     nil)))
         (lambda (pos max) "CHUNK-END-FUN"
-          (ein:log 'blather "CHUNK-END-FUN(pos=%s max=%s)" pos max)
-          (ein:mumamo-find-edge pos max t #',cell-p))))))
+          (ein2:log 'blather "CHUNK-END-FUN(pos=%s max=%s)" pos max)
+          (ein2:mumamo-find-edge pos max t #',cell-p))))))
 
-(ein:mumamo-define-chunk codecell)
-(ein:mumamo-define-chunk textcell)
-(ein:mumamo-define-chunk htmlcell)
-(ein:mumamo-define-chunk markdowncell)
-(ein:mumamo-define-chunk rawcell)
-(ein:mumamo-define-chunk headingcell)
+(ein2:mumamo-define-chunk codecell)
+(ein2:mumamo-define-chunk textcell)
+(ein2:mumamo-define-chunk htmlcell)
+(ein2:mumamo-define-chunk markdowncell)
+(ein2:mumamo-define-chunk rawcell)
+(ein2:mumamo-define-chunk headingcell)
 
-(defun ein:mumamo-find-edge (pos max end cell-p)
-  "Helper function for `ein:mumamo-chunk-codecell'.
+(defun ein2:mumamo-find-edge (pos max end cell-p)
+  "Helper function for `ein2:mumamo-chunk-codecell'.
 
 Return the point of beginning of the input element of cell after
 the point POS.  Return `nil' if it cannot be found before the point
 MAX.  If END is non-`nil', end of the input element is returned."
-  (ein:log 'blather "EIN:MUMAMO-FIND-EDGE(pos=%s max=%s end=%s cell-p=%s)"
+  (ein2:log 'blather "EIN2:MUMAMO-FIND-EDGE(pos=%s max=%s end=%s cell-p=%s)"
            pos max end cell-p)
   (let* ((ewoc-node
-          (ein:worksheet-get-nearest-cell-ewoc-node pos max cell-p))
-         (_ (ein:log 'blather "(null ewoc-node) = %s" (null ewoc-node)))
-         (cell (ein:aand ewoc-node
-                         (ein:$node-data (ewoc-data it))))
-         (_ (ein:log 'blather "(null cell) = %s" (null cell)))
+          (ein2:worksheet-get-nearest-cell-ewoc-node pos max cell-p))
+         (_ (ein2:log 'blather "(null ewoc-node) = %s" (null ewoc-node)))
+         (cell (ein2:aand ewoc-node
+                         (ein2:$node-data (ewoc-data it))))
+         (_ (ein2:log 'blather "(null cell) = %s" (null cell)))
          (find
           (lambda (c)
-            (ein:aand c
-                      (ein:cell-element-get it (if end :after-input :input))
+            (ein2:aand c
+                      (ein2:cell-element-get it (if end :after-input :input))
                       (progn
-                        (ein:log 'blather "(null it) = %s" (null it))
+                        (ein2:log 'blather "(null it) = %s" (null it))
                         (ewoc-location it))
                       (if end it (1+ it)))))
          (input-pos (funcall find cell)))
-    (ein:log 'blather "input-pos (1) = %s" input-pos)
+    (ein2:log 'blather "input-pos (1) = %s" input-pos)
     (when (and input-pos (< input-pos pos))
-      (setq input-pos (ein:aand (ein:cell-next cell)
+      (setq input-pos (ein2:aand (ein2:cell-next cell)
                                 (when (funcall cell-p it) (funcall find it)))))
-    (ein:log 'blather "input-pos (2) = %s" input-pos)
+    (ein2:log 'blather "input-pos (2) = %s" input-pos)
     (when (and input-pos (> input-pos max))
       (setq input-pos nil))
-    (ein:log 'blather "input-pos (3) = %s" input-pos)
+    (ein2:log 'blather "input-pos (3) = %s" input-pos)
     input-pos))
 
 (provide 'ein-mumamo)

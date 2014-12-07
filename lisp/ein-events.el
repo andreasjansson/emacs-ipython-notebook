@@ -34,31 +34,31 @@
 
 ;;; Events handling class
 
-(defclass ein:events ()
+(defclass ein2:events ()
   ((callbacks :initarg :callbacks :type hash-table
               :initform (make-hash-table :test 'eq)))
   "Event handler class.")
 
-(defun ein:events-new ()
+(defun ein2:events-new ()
   "Return a new event handler instance."
-  (make-instance 'ein:events))
+  (make-instance 'ein2:events))
 
-(defun ein:events-trigger (events event-type &optional data)
+(defun ein2:events-trigger (events event-type &optional data)
   "Trigger EVENT-TYPE and let event handler EVENTS handle that event."
-  (ein:log 'debug "Event: %S" event-type)
-  (ein:aif (gethash event-type (oref events :callbacks))
-      (mapc (lambda (cb-arg) (ein:funcall-packed cb-arg data)) it)
-    (ein:log 'info "Unknown event: %S" event-type)))
+  (ein2:log 'debug "Event: %S" event-type)
+  (ein2:aif (gethash event-type (oref events :callbacks))
+      (mapc (lambda (cb-arg) (ein2:funcall-packed cb-arg data)) it)
+    (ein2:log 'info "Unknown event: %S" event-type)))
 
 
-(defmethod ein:events-on ((events ein:events) event-type
+(defmethod ein2:events-on ((events ein2:events) event-type
                           callback &optional arg)
   "Set event trigger hook.
 
 When EVENT-TYPE is triggered on the event handler EVENTS,
 CALLBACK is called.  CALLBACK must take two arguments:
 ARG as the first argument and DATA, which is passed via
-`ein:events-trigger', as the second."
+`ein2:events-trigger', as the second."
   (assert (symbolp event-type))
   (let* ((table (oref events :callbacks))
          (cbs (gethash event-type table)))

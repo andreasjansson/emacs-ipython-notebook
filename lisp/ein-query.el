@@ -35,14 +35,14 @@
 
 ;;; Utils
 
-(defun ein:safe-funcall-packed (packed &rest args)
+(defun ein2:safe-funcall-packed (packed &rest args)
   (when packed
-    (ein:log-ignore-errors (apply #'ein:funcall-packed packed args))))
+    (ein2:log-ignore-errors (apply #'ein2:funcall-packed packed args))))
 
 
 ;;; Variables
 
-(defcustom ein:query-timeout
+(defcustom ein2:query-timeout
   (if (eq request-backend 'url-retrieve) 1000 nil)
   "Default query timeout for HTTP access in millisecond.
 
@@ -52,7 +52,7 @@ If you have ``curl`` command line program, it is automatically set to
 a workaround (see below).
 
 If you do the same operation before the timeout, old operation
-will be canceled \(see also `ein:query-singleton-ajax').
+will be canceled \(see also `ein2:query-singleton-ajax').
 
 .. note:: This value exists because it looks like `url-retrieve'
    occasionally fails to finish \(start?) querying.  Timeout is
@@ -71,37 +71,37 @@ will be canceled \(see also `ein:query-singleton-ajax').
 
 ;;; Functions
 
-(defvar ein:query-running-process-table (make-hash-table :test 'equal))
+(defvar ein2:query-running-process-table (make-hash-table :test 'equal))
 
-(defun* ein:query-singleton-ajax (key url &rest settings
+(defun* ein2:query-singleton-ajax (key url &rest settings
                                       &key
-                                      (timeout ein:query-timeout)
+                                      (timeout ein2:query-timeout)
                                       &allow-other-keys)
   "Cancel the old process if there is a process associated with
 KEY, then call `request' with URL and SETTINGS.  KEY is compared by
 `equal'."
-  (ein:query-gc-running-process-table)
+  (ein2:query-gc-running-process-table)
   (when timeout
     (setq settings (plist-put settings :timeout (/ timeout 1000.0))))
-  (ein:aif (gethash key ein:query-running-process-table)
+  (ein2:aif (gethash key ein2:query-running-process-table)
       (unless (request-response-done-p it)
         (request-abort it)))            ; This will run callbacks
   (let ((response (apply #'request (url-encode-url url) settings)))
-    (puthash key response ein:query-running-process-table)
+    (puthash key response ein2:query-running-process-table)
     response))
 
-(defun ein:query-gc-running-process-table ()
-  "Garbage collect dead processes in `ein:query-running-process-table'."
+(defun ein2:query-gc-running-process-table ()
+  "Garbage collect dead processes in `ein2:query-running-process-table'."
   (maphash
    (lambda (key buffer)
      (when (request-response-done-p buffer)
-       (remhash key ein:query-running-process-table)))
-   ein:query-running-process-table))
+       (remhash key ein2:query-running-process-table)))
+   ein2:query-running-process-table))
 
 
 ;;; Cookie
 
-(defalias 'ein:query-get-cookie 'request-cookie-string)
+(defalias 'ein2:query-get-cookie 'request-cookie-string)
 
 (provide 'ein-query)
 

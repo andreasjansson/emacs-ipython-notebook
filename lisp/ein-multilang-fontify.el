@@ -31,7 +31,7 @@
 ;; if this variable is bound.
 (require 'org-src nil t)
 
-(defun ein:mlf-get-lang-mode (lang)
+(defun ein2:mlf-get-lang-mode (lang)
   "Return major mode for LANG.
 Modified version of `org-src-get-lang-mode'."
   (when (symbolp lang)
@@ -42,9 +42,9 @@ Modified version of `org-src-get-lang-mode'."
                     (cdr (assoc lang org-src-lang-modes)))
                lang))))
 
-(defun ein:mlf-font-lock-fontify-block (lang start end)
+(defun ein2:mlf-font-lock-fontify-block (lang start end)
   "Patched version of `org-src-font-lock-fontify-block'."
-  (let ((lang-mode (ein:mlf-get-lang-mode lang)))
+  (let ((lang-mode (ein2:mlf-get-lang-mode lang)))
     (if (fboundp lang-mode)
         (let ((string (buffer-substring-no-properties start end))
               (modified (buffer-modified-p))
@@ -54,7 +54,7 @@ Modified version of `org-src-get-lang-mode'."
           (remove-text-properties start end '(face nil))
           (with-current-buffer
               (get-buffer-create
-               (concat " ein:mlf-fontification:" (symbol-name lang-mode)))
+               (concat " ein2:mlf-fontification:" (symbol-name lang-mode)))
             (delete-region (point-min) (point-max))
             (insert (concat string " ")) ;; so there's a final property change
             (unless (eq major-mode lang-mode) (funcall lang-mode))

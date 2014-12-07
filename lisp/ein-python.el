@@ -30,27 +30,27 @@
 
 (require 'ein-worksheet)
 
-(defvar ein:python-block-start
+(defvar ein2:python-block-start
   (rx line-start
       symbol-start
       (or "def" "class" "if" "elif" "else" "try"
           "except" "finally" "for" "while" "with")
       symbol-end))
 
-(defun ein:python-indent-calculate-levels ()
+(defun ein2:python-indent-calculate-levels ()
   "Forcefully set indent level to 0 when there is no python block
 yet in this cell."
-  (ein:and-let* ((cell (ein:worksheet-get-current-cell :noerror t))
-                 (beg (ein:cell-input-pos-min cell))
+  (ein2:and-let* ((cell (ein2:worksheet-get-current-cell :noerror t))
+                 (beg (ein2:cell-input-pos-min cell))
                  ((< beg (point))))
     (save-excursion
-      (unless (search-backward-regexp ein:python-block-start beg t)
+      (unless (search-backward-regexp ein2:python-block-start beg t)
         (setq python-indent-levels (list 0))
         (setq python-indent-current-level 0)
         t))))
 
 (defadvice python-indent-calculate-levels
-  (around ein:python-indent-calculate-levels activate)
+  (around ein2:python-indent-calculate-levels activate)
   "Hack `python-indent-calculate-levels' to reset indent per cell.
 
 Let's say you have a notebook something like this::
@@ -69,7 +69,7 @@ workaround this problem.
 
 Note that this workaround does not work with the MuMaMo based
 notebook mode."
-  (unless (ein:python-indent-calculate-levels)
+  (unless (ein2:python-indent-calculate-levels)
     ad-do-it))
 
 (provide 'ein-python)

@@ -35,8 +35,8 @@
 
 ;;; Macros
 
-(defmacro ein:helm-export-source (name)
-  (let* ((orig-source (intern (format "ein:helm-source-%s"        name)))
+(defmacro ein2:helm-export-source (name)
+  (let* ((orig-source (intern (format "ein2:helm-source-%s"        name)))
          (any-source  (intern (format "anything-c-source-ein-%s" name)))
          (helm-source (intern (format "helm-c-source-ein-%s"     name)))
          (docstring (format "Alias to `%s'" orig-source)))
@@ -47,17 +47,17 @@
 
 ;;; Dynamic Variables
 
-(defvar ein:helm-pattern 'helm-pattern
+(defvar ein2:helm-pattern 'helm-pattern
   "Dynamically bound to one of `helm-pattern' or `anything-pattern'.")
 
-(defvar ein:helm-kernel nil
+(defvar ein2:helm-kernel nil
   "Dynamically bound to a kernel object.")
 
 
 
 ;;; History search
 
-(defcustom ein:helm-kernel-history-search-auto-pattern t
+(defcustom ein2:helm-kernel-history-search-auto-pattern t
   "Automatically construct search pattern when non-`nil'.
 
 1. Single space is converted to \"*\".
@@ -68,8 +68,8 @@ This variable applies to both `helm-ein-kernel-history' and
 `anything-ein-kernel-history'."
   :group 'ein)
 
-(defun ein:helm-kernel-history-search-construct-pattern (pattern)
-  (when ein:helm-kernel-history-search-auto-pattern
+(defun ein2:helm-kernel-history-search-construct-pattern (pattern)
+  (when ein2:helm-kernel-history-search-auto-pattern
     (setq pattern
           (replace-regexp-in-string "[^\\\\ ]\\( \\)[^\\\\ ]"
                                     "*" pattern nil nil 1))
@@ -78,21 +78,21 @@ This variable applies to both `helm-ein-kernel-history' and
     (setq pattern (concat "*" pattern "*")))
   pattern)
 
-(defun ein:helm-kernel-history-search-get-candidates ()
+(defun ein2:helm-kernel-history-search-get-candidates ()
   "Retrieve search result from kernel.
 It requires the following dynamical variables:
-* `ein:helm-pattern'
-* `ein:helm-kernel'"
-  (let* ((pattern (ein:helm-kernel-history-search-construct-pattern
-                   (eval ein:helm-pattern)))
-         (candidates (ein:kernel-history-search-synchronously
-                      ein:helm-kernel pattern :unique t)))
+* `ein2:helm-pattern'
+* `ein2:helm-kernel'"
+  (let* ((pattern (ein2:helm-kernel-history-search-construct-pattern
+                   (eval ein2:helm-pattern)))
+         (candidates (ein2:kernel-history-search-synchronously
+                      ein2:helm-kernel pattern :unique t)))
     ;; Most recent history first:
     (nreverse candidates)))
 
-(defvar ein:helm-source-kernel-history
+(defvar ein2:helm-source-kernel-history
   '((name . "IPython history")
-    (candidates . ein:helm-kernel-history-search-get-candidates)
+    (candidates . ein2:helm-kernel-history-search-get-candidates)
     (requires-pattern . 3)
     ;; There is no need to filter out candidates:
     (match . (identity))
@@ -106,69 +106,69 @@ It requires the following dynamical variables:
 (defun anything-ein-kernel-history ()
   "Search kernel execution history then insert the selected one."
   (interactive)
-  (let ((ein:helm-pattern 'anything-pattern)
-        (ein:helm-kernel (ein:get-kernel-or-error)))
-    (anything-other-buffer ein:helm-source-kernel-history "*anything ein*")))
+  (let ((ein2:helm-pattern 'anything-pattern)
+        (ein2:helm-kernel (ein2:get-kernel-or-error)))
+    (anything-other-buffer ein2:helm-source-kernel-history "*anything ein*")))
 
 ;;;###autoload
 (defun helm-ein-kernel-history ()
   "Search kernel execution history then insert the selected one."
   (interactive)
-  (let ((ein:helm-pattern 'helm-pattern)
-        (ein:helm-kernel (ein:get-kernel-or-error)))
-    (helm-other-buffer ein:helm-source-kernel-history "*helm ein*")))
+  (let ((ein2:helm-pattern 'helm-pattern)
+        (ein2:helm-kernel (ein2:get-kernel-or-error)))
+    (helm-other-buffer ein2:helm-source-kernel-history "*helm ein*")))
 
 
 
 ;;; Notebook buffers
 
-(defvar ein:helm-source-notebook-buffers
+(defvar ein2:helm-source-notebook-buffers
   '((name . "All IPython notebook buffers")
-    (candidates . ein:notebook-opened-buffer-names)
+    (candidates . ein2:notebook-opened-buffer-names)
     (type . buffer))
   "Helm/anything source for all opened notebook buffers.")
 
-(defvar ein:helm-source-modified-notebook-buffers
+(defvar ein2:helm-source-modified-notebook-buffers
   '((name . "Modified IPython notebook buffers")
     (candidates
      . (lambda ()
-         (ein:notebook-opened-buffer-names #'ein:notebook-modified-p)))
+         (ein2:notebook-opened-buffer-names #'ein2:notebook-modified-p)))
     (type . buffer))
   "Helm/anything source for modified notebook buffers.")
 
-(defvar ein:helm-source-saved-notebook-buffers
+(defvar ein2:helm-source-saved-notebook-buffers
   '((name . "Saved IPython notebook buffers")
     (candidates
      . (lambda ()
-         (ein:notebook-opened-buffer-names
-          (lambda (nb) (not (ein:notebook-modified-p nb))))))
+         (ein2:notebook-opened-buffer-names
+          (lambda (nb) (not (ein2:notebook-modified-p nb))))))
     (type . buffer))
   "Helm/anything source for saved notebook buffers.")
 
 
 ;;; "Export" sources to `helm/anything-c-source-*'
-(ein:helm-export-source notebook-buffers)
-(ein:helm-export-source modified-notebook-buffers)
-(ein:helm-export-source saved-notebook-buffers)
+(ein2:helm-export-source notebook-buffers)
+(ein2:helm-export-source modified-notebook-buffers)
+(ein2:helm-export-source saved-notebook-buffers)
 
 
 ;;; Helm/anything commands
 
-(defvar ein:helm-notebook-buffer-sources
-  '(ein:helm-source-modified-notebook-buffers
-    ein:helm-source-saved-notebook-buffers))
+(defvar ein2:helm-notebook-buffer-sources
+  '(ein2:helm-source-modified-notebook-buffers
+    ein2:helm-source-saved-notebook-buffers))
 
 ;;;###autoload
 (defun anything-ein-notebook-buffers ()
   "Choose opened notebook using anything.el interface."
   (interactive)
-  (anything-other-buffer ein:helm-notebook-buffer-sources "*anything ein*"))
+  (anything-other-buffer ein2:helm-notebook-buffer-sources "*anything ein*"))
 
 ;;;###autoload
 (defun helm-ein-notebook-buffers ()
   "Choose opened notebook using helm interface."
   (interactive)
-  (helm-other-buffer ein:helm-notebook-buffer-sources "*helm ein*"))
+  (helm-other-buffer ein2:helm-notebook-buffer-sources "*helm ein*"))
 
 (provide 'ein-helm)
 ;;; ein-helm.el ends here

@@ -32,14 +32,14 @@
 (require 'ein-completer)
 (eval-when-compile (require 'ein-connect))
 
-(defvar ein:jedi-dot-complete-sources
+(defvar ein2:jedi-dot-complete-sources
   '(ac-source-jedi-direct ac-source-ein-direct))
 
-(defun ein:jedi--completer-complete ()
+(defun ein2:jedi--completer-complete ()
   (let ((d (deferred:new #'identity))
-        (kernel (ein:get-kernel)))
-    (if (ein:kernel-live-p kernel)
-        (ein:completer-complete
+        (kernel (ein2:get-kernel)))
+    (if (ein2:kernel-live-p kernel)
+        (ein2:completer-complete
          kernel
          :callbacks
          (list :complete_reply
@@ -50,14 +50,14 @@
     d))
 
 ;;;###autoload
-(defun* ein:jedi-complete (&key (expand ac-expand-on-auto-complete))
+(defun* ein2:jedi-complete (&key (expand ac-expand-on-auto-complete))
   "Run completion using candidates calculated by EIN and Jedi."
   (interactive)
   (lexical-let ((expand expand))
     (deferred:$
       (deferred:parallel              ; or `deferred:earlier' is better?
         (jedi:complete-request)
-        (ein:jedi--completer-complete))
+        (ein2:jedi--completer-complete))
       (deferred:nextc it
         (lambda (replies)
           (destructuring-bind
@@ -65,35 +65,35 @@
                ((&key matched_text matches &allow-other-keys) ; :complete_reply
                 _))  ; ignore metadata
               replies
-            (ein:ac-prepare-completion matches)
+            (ein2:ac-prepare-completion matches)
             (let ((ac-expand-on-auto-complete expand))
               (ac-start))))))))
 ;; Why `ac-start'?  See: `jedi:complete'.
 
 ;;;###autoload
-(defun ein:jedi-dot-complete ()
-  "Insert \".\" and run `ein:jedi-complete'."
+(defun ein2:jedi-dot-complete ()
+  "Insert \".\" and run `ein2:jedi-complete'."
   (interactive)
   (insert ".")
   (unless (ac-cursor-on-diable-face-p)
-    (ein:jedi-complete :expand nil)))
+    (ein2:jedi-complete :expand nil)))
 
-(defun ein:jedi-complete-on-dot-install (map)
-  (ein:complete-on-dot-install map #'ein:jedi-dot-complete))
+(defun ein2:jedi-complete-on-dot-install (map)
+  (ein2:complete-on-dot-install map #'ein2:jedi-dot-complete))
 
 ;;;###autoload
-(defun ein:jedi-setup ()
+(defun ein2:jedi-setup ()
   "Setup auto-completion using EIN and Jedi.el_ together.
 
 Jedi.el_ is a Python auto-completion library for Emacs.
 To use EIN and Jedi together, add the following in your Emacs setup.::
 
-  (add-hook 'ein:connect-mode-hook 'ein:jedi-setup)
+  (add-hook 'ein2:connect-mode-hook 'ein2:jedi-setup)
 
 .. _Jedi.el: https://github.com/tkf/emacs-jedi"
-  (let ((map ein:connect-mode-map))
-    (define-key map "\C-c\C-i" 'ein:jedi-complete)
-    (ein:jedi-complete-on-dot-install map)))
+  (let ((map ein2:connect-mode-map))
+    (define-key map "\C-c\C-i" 'ein2:jedi-complete)
+    (ein2:jedi-complete-on-dot-install map)))
 
 (provide 'ein-jedi)
 

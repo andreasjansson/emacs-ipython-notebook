@@ -26,21 +26,21 @@
 
 ;;; Code:
 
-(defvar ein:pseudo-console-mode-map (make-sparse-keymap))
+(defvar ein2:pseudo-console-mode-map (make-sparse-keymap))
 
-(let ((map ein:pseudo-console-mode-map))
-  (define-key map "\C-m" 'ein:worksheet-execute-cell-and-insert-below))
+(let ((map ein2:pseudo-console-mode-map))
+  (define-key map "\C-m" 'ein2:worksheet-execute-cell-and-insert-below))
 
 ;;;###autoload
-(define-minor-mode ein:pseudo-console-mode
+(define-minor-mode ein2:pseudo-console-mode
   "Pseudo console mode.  Hit RET to execute code."
-  :lighter " ein:pseudo"
-  :keymap ein:pseudo-console-mode-map
+  :lighter " ein2:pseudo"
+  :keymap ein2:pseudo-console-mode-map
   :group 'ein)
 
-;; To avoid MuMaMo to discard `ein:pseudo-console-mode', make it
+;; To avoid MuMaMo to discard `ein2:pseudo-console-mode', make it
 ;; permanent local.
-(put 'ein:pseudo-console-mode 'permanent-local t)
+(put 'ein2:pseudo-console-mode 'permanent-local t)
 
 (provide 'ein-pseudo-console)
 

@@ -30,42 +30,42 @@
 (require 'ein-core)
 (require 'ein-events)
 
-;; FIXME: Make a class with `:get-notebook-name' slot like `ein:worksheet'
+;; FIXME: Make a class with `:get-notebook-name' slot like `ein2:worksheet'
 
-(defun ein:pager-new (name events)
+(defun ein2:pager-new (name events)
   ;; currently pager = name.
-  (ein:pager-bind-events name events)
+  (ein2:pager-bind-events name events)
   name)
 
-(defun ein:pager-bind-events (pager events)
+(defun ein2:pager-bind-events (pager events)
   "Bind events related to PAGER to the event handler EVENTS."
-  (ein:events-on events
+  (ein2:events-on events
                  'open_with_text.Pager
-                 #'ein:pager--open-with-text
+                 #'ein2:pager--open-with-text
                  pager))
 
-(defun ein:pager--open-with-text (pager data)
+(defun ein2:pager--open-with-text (pager data)
   (let ((text (plist-get data :text)))
-    (unless (equal (ein:trim text) "")
-      (ein:pager-clear pager)
-      (ein:pager-expand pager)
-      (ein:pager-append-text pager text))))
+    (unless (equal (ein2:trim text) "")
+      (ein2:pager-clear pager)
+      (ein2:pager-expand pager)
+      (ein2:pager-append-text pager text))))
 
-(defun ein:pager-clear (pager)
-  (ein:with-read-only-buffer (get-buffer-create pager)
+(defun ein2:pager-clear (pager)
+  (ein2:with-read-only-buffer (get-buffer-create pager)
     (erase-buffer)))
 
-(defun ein:pager-expand (pager)
+(defun ein2:pager-expand (pager)
   (pop-to-buffer (get-buffer-create pager))
   (goto-char (point-min)))
 
-(defun ein:pager-append-text (pager text)
-  (ein:with-read-only-buffer (get-buffer-create pager)
+(defun ein2:pager-append-text (pager text)
+  (ein2:with-read-only-buffer (get-buffer-create pager)
     (insert (ansi-color-apply text))
-    (ein:pager-mode)))
+    (ein2:pager-mode)))
 
 ;; FIXME: this should be automatically called when opening pager.
-(defun ein:pager-goto-docstring-bset-loc ()
+(defun ein2:pager-goto-docstring-bset-loc ()
   "Goto the best location of the documentation."
   (interactive)
   (goto-char (point-min))
@@ -73,15 +73,15 @@
   (beginning-of-line 0)
   (recenter 0))
 
-(define-derived-mode ein:pager-mode fundamental-mode "ein:pager"
+(define-derived-mode ein2:pager-mode fundamental-mode "ein2:pager"
   "IPython notebook pager mode."
   (view-mode)
   (font-lock-mode))
 
-(setq ein:pager-mode-map (make-sparse-keymap))
+(setq ein2:pager-mode-map (make-sparse-keymap))
 
-(let ((map ein:pager-mode-map))
-  (define-key map "\C-c\C-b" 'ein:pager-goto-docstring-bset-loc)
+(let ((map ein2:pager-mode-map))
+  (define-key map "\C-c\C-b" 'ein2:pager-goto-docstring-bset-loc)
   (define-key map "q" 'bury-buffer)
   map)
 

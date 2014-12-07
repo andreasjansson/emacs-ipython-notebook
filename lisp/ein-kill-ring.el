@@ -25,29 +25,29 @@
 
 ;;; Code:
 
-(defvar ein:kill-ring nil)
-(defvar ein:kill-ring-yank-pointer nil)
-(defvar ein:kill-ring-max kill-ring-max)
+(defvar ein2:kill-ring nil)
+(defvar ein2:kill-ring-yank-pointer nil)
+(defvar ein2:kill-ring-max kill-ring-max)
 
-(defun ein:kill-new (obj)
-  "Make OBJ the latest kill in the kill ring `ein:kill-ring'.
-Set `ein:kill-ring-yank-pointer' to point to it."
-  (push obj ein:kill-ring)
-  (if (> (length ein:kill-ring) ein:kill-ring-max)
-      (setcdr (nthcdr (1- ein:kill-ring-max) ein:kill-ring) nil))
-  (setq ein:kill-ring-yank-pointer ein:kill-ring))
+(defun ein2:kill-new (obj)
+  "Make OBJ the latest kill in the kill ring `ein2:kill-ring'.
+Set `ein2:kill-ring-yank-pointer' to point to it."
+  (push obj ein2:kill-ring)
+  (if (> (length ein2:kill-ring) ein2:kill-ring-max)
+      (setcdr (nthcdr (1- ein2:kill-ring-max) ein2:kill-ring) nil))
+  (setq ein2:kill-ring-yank-pointer ein2:kill-ring))
 
-(defun ein:current-kill (n &optional do-not-move)
+(defun ein2:current-kill (n &optional do-not-move)
   "Rotate the yanking point by N places, and then return that kill.
 If optional arg DO-NOT-MOVE is non-nil, then don't actually
 move the yanking point; just return the Nth kill forward."
-  (unless ein:kill-ring (error "Kill ring is empty"))
+  (unless ein2:kill-ring (error "Kill ring is empty"))
   (let ((ARGth-kill-element
-         (nthcdr (mod (- n (length ein:kill-ring-yank-pointer))
-                      (length ein:kill-ring))
-                 ein:kill-ring)))
+         (nthcdr (mod (- n (length ein2:kill-ring-yank-pointer))
+                      (length ein2:kill-ring))
+                 ein2:kill-ring)))
     (unless do-not-move
-      (setq ein:kill-ring-yank-pointer ARGth-kill-element))
+      (setq ein2:kill-ring-yank-pointer ARGth-kill-element))
     (car ARGth-kill-element)))
 
 (provide 'ein-kill-ring)

@@ -23,9 +23,9 @@
 
 ;; FIXME: There is a problem when connected notebook is closed.
 ;;        This can be fixed in some ways:
-;; * Turn off ein:connect when the command that uses kernel is invoked
+;; * Turn off ein2:connect when the command that uses kernel is invoked
 ;;   but corresponding notebook was closed already.
-;; * Connect directly to ein:kernel and make its destructor to care
+;; * Connect directly to ein2:kernel and make its destructor to care
 ;;   about connecting buffers.
 
 ;;; Code:
@@ -35,13 +35,13 @@
 
 (require 'ein-notebook)
 
-(declare-function ein:notebooklist-list-notebooks "ein-notebooklist")
-(declare-function ein:notebooklist-open-notebook-global "ein-notebooklist")
+(declare-function ein2:notebooklist-list-notebooks "ein-notebooklist")
+(declare-function ein2:notebooklist-open-notebook-global "ein-notebooklist")
 
 
 ;;; Utils
 
-(defun ein:maybe-save-buffer (option)
+(defun ein2:maybe-save-buffer (option)
   "Conditionally save current buffer.
 Return `t' if the buffer is unmodified or `nil' otherwise.
 If the buffer is modified, buffer is saved depending on the value
@@ -62,9 +62,9 @@ of OPTION:
 
 ;;; Configuration
 
-(defcustom ein:connect-run-command "%run"
-  "``%run`` magic command used for `ein:connect-run-buffer'.
-Types same as `ein:console-security-dir' are valid."
+(defcustom ein2:connect-run-command "%run"
+  "``%run`` magic command used for `ein2:connect-run-buffer'.
+Types same as `ein2:console-security-dir' are valid."
   :type '(choice
           (string :tag "command" "%run")
           (alist :tag "command mapping"
@@ -77,9 +77,9 @@ Types same as `ein:console-security-dir' are valid."
                     (lambda (url-or-port) (format "%%run -n -i -t -d"))))
   :group 'ein)
 
-(defcustom ein:connect-reload-command "%run -n"
-  "Setting for `ein:connect-reload-buffer'.
-Same as `ein:connect-run-command'."
+(defcustom ein2:connect-reload-command "%run -n"
+  "Setting for `ein2:connect-reload-buffer'.
+Same as `ein2:connect-run-command'."
   :type '(choice
           (string :tag "command" "%run")
           (alist :tag "command mapping"
@@ -92,40 +92,40 @@ Same as `ein:connect-run-command'."
                     (lambda (url-or-port) (format "%%run -n -i -t -d"))))
   :group 'ein)
 
-(defun ein:connect-run-command-get ()
-  (ein:choose-setting 'ein:connect-run-command
-                      (ein:$notebook-url-or-port (ein:connect-get-notebook))))
+(defun ein2:connect-run-command-get ()
+  (ein2:choose-setting 'ein2:connect-run-command
+                      (ein2:$notebook-url-or-port (ein2:connect-get-notebook))))
 
-(defcustom ein:connect-save-before-run 'yes
-  "Whether the buffer should be saved before `ein:connect-run-buffer'."
+(defcustom ein2:connect-save-before-run 'yes
+  "Whether the buffer should be saved before `ein2:connect-run-buffer'."
   :type '(choice (const :tag "Always save buffer" yes)
                  (const :tag "Always do not save buffer" no)
                  (const :tag "Ask" ask))
   :group 'ein)
 
-(defcustom ein:connect-aotoexec-lighter nil
-  "String appended to the lighter of `ein:connect-mode' (`ein:c')
+(defcustom ein2:connect-aotoexec-lighter nil
+  "String appended to the lighter of `ein2:connect-mode' (`ein2:c')
 when auto-execution mode is on.  When `nil', use the same string
-as `ein:cell-autoexec-prompt'."
-  :type '(choice (string :tag "String appended to ein:c" "@")
-                 (const :tag "Use `ein:cell-autoexec-prompt'." nil))
+as `ein2:cell-autoexec-prompt'."
+  :type '(choice (string :tag "String appended to ein2:c" "@")
+                 (const :tag "Use `ein2:cell-autoexec-prompt'." nil))
   :group 'ein)
 
-(defcustom ein:connect-default-notebook nil
-  "Notebook to be connect when `ein:connect-to-default-notebook' is called.
+(defcustom ein2:connect-default-notebook nil
+  "Notebook to be connect when `ein2:connect-to-default-notebook' is called.
 
 Example setting to connect to \"My_Notebook\" in the server at
 port 8888 when opening any buffer in `python-mode'::
 
-  (setq ein:connect-default-notebook \"8888/My_Notebook\")
-  (add-hook 'python-mode-hook 'ein:connect-to-default-notebook)
+  (setq ein2:connect-default-notebook \"8888/My_Notebook\")
+  (add-hook 'python-mode-hook 'ein2:connect-to-default-notebook)
 
-`ein:connect-default-notebook' can also be a function without any
+`ein2:connect-default-notebook' can also be a function without any
 argument.  This function must return a string (notebook path of
 the form \"URL-OR-PORT/NOTEBOOK-NAME\").
 
-As `ein:connect-to-default-notebook' requires notebook list to be
-loaded, consider using `ein:notebooklist-load' to load notebook
+As `ein2:connect-to-default-notebook' requires notebook list to be
+loaded, consider using `ein2:notebooklist-load' to load notebook
 list if you want to connect to notebook without manually opening
 notebook list."
   :type '(choice (string :tag "URL-OR-PORT/NOTEBOOK-NAME")
@@ -135,24 +135,24 @@ notebook list."
 
 ;;; Class
 
-(ein:deflocal ein:%connect% nil
-  "Buffer local variable to store an instance of `ein:connect'")
-(define-obsolete-variable-alias 'ein:@connect 'ein:%connect% "0.1.2")
+(ein2:deflocal ein2:%connect% nil
+  "Buffer local variable to store an instance of `ein2:connect'")
+(define-obsolete-variable-alias 'ein2:@connect 'ein2:%connect% "0.1.2")
 
-(defclass ein:connect ()
-  ((notebook :initarg :notebook :type ein:$notebook)
+(defclass ein2:connect ()
+  ((notebook :initarg :notebook :type ein2:$notebook)
    (buffer :initarg :buffer :type buffer)
    (autoexec :initarg :autoexec :initform nil :type boolean
              :document "Auto-execution mode flag.
 
-See also the document of the `autoexec' slot of `ein:codecell'
+See also the document of the `autoexec' slot of `ein2:codecell'
 class.")))
 
-(defun ein:connect-setup (notebook buffer)
+(defun ein2:connect-setup (notebook buffer)
   (with-current-buffer buffer
-    (setq ein:%connect%
-          (ein:connect "Connect" :notebook notebook :buffer buffer))
-    ein:%connect%))
+    (setq ein2:%connect%
+          (ein2:connect "Connect" :notebook notebook :buffer buffer))
+    ein2:%connect%))
 
 
 ;;; Methods
@@ -160,162 +160,162 @@ class.")))
 ;; FIXME: Clarify names of these `connect-to-*' functions:
 
 ;;;###autoload
-(defun ein:connect-to-notebook-command (&optional not-yet-opened)
+(defun ein2:connect-to-notebook-command (&optional not-yet-opened)
   "Connect to notebook.  When the prefix argument is given,
 you can choose any notebook on your server including the ones
 not yet opened.  Otherwise, already chose from already opened
 notebooks."
   (interactive "P")
   (call-interactively (if not-yet-opened
-                          #'ein:connect-to-notebook
-                        #'ein:connect-to-notebook-buffer)))
+                          #'ein2:connect-to-notebook
+                        #'ein2:connect-to-notebook-buffer)))
 
 ;;;###autoload
-(defun ein:connect-to-notebook (nbpath &optional buffer no-reconnection)
+(defun ein2:connect-to-notebook (nbpath &optional buffer no-reconnection)
   "Connect any buffer to notebook and its kernel."
   (interactive
    (list
     (completing-read
      "Notebook to connect [URL-OR-PORT/NAME]: "
-     (ein:notebooklist-list-notebooks))))
-  (ein:notebooklist-open-notebook-global
+     (ein2:notebooklist-list-notebooks))))
+  (ein2:notebooklist-open-notebook-global
    nbpath
    (lambda (notebook -ignore- buffer no-reconnection)
-     (ein:connect-buffer-to-notebook notebook buffer no-reconnection))
+     (ein2:connect-buffer-to-notebook notebook buffer no-reconnection))
    (list (or buffer (current-buffer)) no-reconnection)))
 
 ;;;###autoload
-(defun ein:connect-to-notebook-buffer (buffer-or-name)
+(defun ein2:connect-to-notebook-buffer (buffer-or-name)
   "Connect any buffer to opened notebook and its kernel."
   (interactive (list (completing-read "Notebook buffer to connect: "
-                                      (ein:notebook-opened-buffer-names))))
+                                      (ein2:notebook-opened-buffer-names))))
   (let ((notebook
-         (buffer-local-value 'ein:%notebook% (get-buffer buffer-or-name))))
-    (ein:connect-buffer-to-notebook notebook)))
+         (buffer-local-value 'ein2:%notebook% (get-buffer buffer-or-name))))
+    (ein2:connect-buffer-to-notebook notebook)))
 
 ;;;###autoload
-(defun ein:connect-buffer-to-notebook (notebook &optional buffer
+(defun ein2:connect-buffer-to-notebook (notebook &optional buffer
                                                 no-reconnection)
   "Connect BUFFER to NOTEBOOK."
   (unless buffer
     (setq buffer (current-buffer)))
   (with-current-buffer buffer
     (if (or (not no-reconnection)
-            (not ein:%connect%))
-        (let ((connection (ein:connect-setup notebook buffer)))
-          (when (ein:eval-if-bound 'ac-sources)
+            (not ein2:%connect%))
+        (let ((connection (ein2:connect-setup notebook buffer)))
+          (when (ein2:eval-if-bound 'ac-sources)
             (push 'ac-source-ein-async ac-sources))
-          (ein:connect-mode)
-          (ein:log 'info "Connected to %s"
-                   (ein:$notebook-notebook-name notebook))
+          (ein2:connect-mode)
+          (ein2:log 'info "Connected to %s"
+                   (ein2:$notebook-notebook-name notebook))
           connection)
-      (ein:log 'info "Buffer is already connected to notebook."))))
+      (ein2:log 'info "Buffer is already connected to notebook."))))
 
-(defun ein:connect-get-notebook ()
-  (oref ein:%connect% :notebook))
+(defun ein2:connect-get-notebook ()
+  (oref ein2:%connect% :notebook))
 
-(defun ein:connect-get-kernel ()
-  (ein:$notebook-kernel (ein:connect-get-notebook)))
+(defun ein2:connect-get-kernel ()
+  (ein2:$notebook-kernel (ein2:connect-get-notebook)))
 
-(defun ein:connect-eval-buffer ()
+(defun ein2:connect-eval-buffer ()
   "Evaluate the whole buffer.  Note that this will run the code
 inside the ``if __name__ == \"__main__\":`` block."
   (interactive)
-  (ein:shared-output-eval-string (buffer-string) nil nil nil :silent t)
-  (ein:connect-execute-autoexec-cells)
-  (ein:log 'info "Whole buffer is sent to the kernel."))
+  (ein2:shared-output-eval-string (buffer-string) nil nil nil :silent t)
+  (ein2:connect-execute-autoexec-cells)
+  (ein2:log 'info "Whole buffer is sent to the kernel."))
 
-(defun ein:connect-run-buffer (&optional ask-command)
+(defun ein2:connect-run-buffer (&optional ask-command)
   "Run buffer using ``%run``.  Ask for command if the prefix ``C-u`` is given.
-Variable `ein:connect-run-command' sets the default command."
+Variable `ein2:connect-run-command' sets the default command."
   (interactive "P")
-  (ein:aif (ein:aand (ein:get-url-or-port)
-                     (ein:filename-to-python it (buffer-file-name)))
-      (let* ((default-command (ein:connect-run-command-get))
+  (ein2:aif (ein2:aand (ein2:get-url-or-port)
+                     (ein2:filename-to-python it (buffer-file-name)))
+      (let* ((default-command (ein2:connect-run-command-get))
              (command (if ask-command
                           (read-from-minibuffer "Command: " default-command)
                         default-command))
              (cmd (format "%s %s" command it)))
-        (if (ein:maybe-save-buffer ein:connect-save-before-run)
+        (if (ein2:maybe-save-buffer ein2:connect-save-before-run)
             (progn
-              (ein:shared-output-eval-string cmd nil nil nil :silent t)
-              (ein:connect-execute-autoexec-cells)
-              (ein:log 'info "Command sent to the kernel: %s" cmd))
-          (ein:log 'info "Buffer must be saved before %%run.")))
+              (ein2:shared-output-eval-string cmd nil nil nil :silent t)
+              (ein2:connect-execute-autoexec-cells)
+              (ein2:log 'info "Command sent to the kernel: %s" cmd))
+          (ein2:log 'info "Buffer must be saved before %%run.")))
     (error (concat "This buffer has no associated file.  "
-                   "Use `ein:connect-eval-buffer' instead."))))
+                   "Use `ein2:connect-eval-buffer' instead."))))
 
-(defun ein:connect-run-or-eval-buffer (&optional eval)
+(defun ein2:connect-run-or-eval-buffer (&optional eval)
   "Run buffer using the ``%run`` magic command or eval whole
 buffer if the prefix ``C-u`` is given.
-Variable `ein:connect-run-command' sets the command to run.
+Variable `ein2:connect-run-command' sets the command to run.
 You can change the command and/or set the options.
-See also: `ein:connect-run-buffer', `ein:connect-eval-buffer'."
+See also: `ein2:connect-run-buffer', `ein2:connect-eval-buffer'."
   (interactive "P")
   (if eval
-      (ein:connect-eval-buffer)
-    (ein:connect-run-buffer)))
+      (ein2:connect-eval-buffer)
+    (ein2:connect-run-buffer)))
 
-(defun ein:connect-reload-buffer ()
-  "Reload buffer using the command set by `ein:connect-reload-command'."
+(defun ein2:connect-reload-buffer ()
+  "Reload buffer using the command set by `ein2:connect-reload-command'."
   (interactive)
-  (let ((ein:connect-run-command ein:connect-reload-command))
-    (call-interactively #'ein:connect-run-buffer)))
+  (let ((ein2:connect-run-command ein2:connect-reload-command))
+    (call-interactively #'ein2:connect-run-buffer)))
 
-(defun ein:connect-eval-region (start end)
+(defun ein2:connect-eval-region (start end)
   (interactive "r")
-  (ein:shared-output-eval-string (buffer-substring start end))
-  (ein:log 'info "Selected region is sent to the kernel."))
+  (ein2:shared-output-eval-string (buffer-substring start end))
+  (ein2:log 'info "Selected region is sent to the kernel."))
 
 (define-obsolete-function-alias
-  'ein:connect-eval-string-internal
-  'ein:shared-output-eval-string "0.1.2")
+  'ein2:connect-eval-string-internal
+  'ein2:shared-output-eval-string "0.1.2")
 
 (define-obsolete-function-alias
-  'ein:connect-request-tool-tip-or-help-command
-  'ein:pytools-request-tooltip-or-help "0.1.2")
+  'ein2:connect-request-tool-tip-or-help-command
+  'ein2:pytools-request-tooltip-or-help "0.1.2")
 
-(defun ein:connect-pop-to-notebook ()
+(defun ein2:connect-pop-to-notebook ()
   (interactive)
-  (ein:connect-assert-connected)
-  (pop-to-buffer (ein:notebook-buffer (ein:connect-get-notebook))))
+  (ein2:connect-assert-connected)
+  (pop-to-buffer (ein2:notebook-buffer (ein2:connect-get-notebook))))
 
 
 ;;; Generic getter
 
-(defun ein:get-url-or-port--connect ()
-  (ein:aand (ein:get-notebook--connect) (ein:$notebook-url-or-port it)))
+(defun ein2:get-url-or-port--connect ()
+  (ein2:aand (ein2:get-notebook--connect) (ein2:$notebook-url-or-port it)))
 
-(defun ein:get-notebook--connect ()
-  (when (ein:connect-p ein:%connect%)
-    (oref ein:%connect% :notebook)))
+(defun ein2:get-notebook--connect ()
+  (when (ein2:connect-p ein2:%connect%)
+    (oref ein2:%connect% :notebook)))
 
-(defun ein:get-kernel--connect ()
-  (ein:aand (ein:get-notebook--connect) (ein:$notebook-kernel it)))
+(defun ein2:get-kernel--connect ()
+  (ein2:aand (ein2:get-notebook--connect) (ein2:$notebook-kernel it)))
 
-(defun ein:get-traceback-data--connect ()
+(defun ein2:get-traceback-data--connect ()
   ;; FIXME: Check if the TB in shared-output buffer is originated from
   ;;        the current buffer.
-  (ein:aand (ein:shared-output-get-cell) (ein:cell-get-tb-data it)))
-(autoload 'ein:shared-output-get-cell "ein-shared-output") ; FIXME: Remove!
+  (ein2:aand (ein2:shared-output-get-cell) (ein2:cell-get-tb-data it)))
+(autoload 'ein2:shared-output-get-cell "ein-shared-output") ; FIXME: Remove!
 
 
 ;;; Auto-execution
 
-(defun ein:connect-assert-connected ()
-  (assert (ein:connect-p ein:%connect%) nil
+(defun ein2:connect-assert-connected ()
+  (assert (ein2:connect-p ein2:%connect%) nil
           "Current buffer (%s) is not connected to IPython notebook."
           (buffer-name))
-  (assert (ein:notebook-live-p (oref ein:%connect% :notebook)) nil
+  (assert (ein2:notebook-live-p (oref ein2:%connect% :notebook)) nil
           "Connected notebook is not live (probably already closed)."))
 
-(defun ein:connect-execute-autoexec-cells ()
-  "Call `ein:notebook-execute-autoexec-cells' via `after-save-hook'."
-  (ein:connect-assert-connected)
-  (when (oref ein:%connect% :autoexec)
-    (ein:notebook-execute-autoexec-cells (ein:connect-get-notebook))))
+(defun ein2:connect-execute-autoexec-cells ()
+  "Call `ein2:notebook-execute-autoexec-cells' via `after-save-hook'."
+  (ein2:connect-assert-connected)
+  (when (oref ein2:%connect% :autoexec)
+    (ein2:notebook-execute-autoexec-cells (ein2:connect-get-notebook))))
 
-(defun ein:connect-toggle-autoexec ()
+(defun ein2:connect-toggle-autoexec ()
   "Toggle auto-execution mode of the current connected buffer.
 
 When auto-execution mode is on, cells in connected notebook will
@@ -324,78 +324,78 @@ is called in this buffer.
 
 .. [#] Namely, one of
 
-   * `ein:connect-run-buffer'
-   * `ein:connect-eval-buffer'
-   * `ein:connect-run-or-eval-buffer'
-   * `ein:connect-reload-buffer'
+   * `ein2:connect-run-buffer'
+   * `ein2:connect-eval-buffer'
+   * `ein2:connect-run-or-eval-buffer'
+   * `ein2:connect-reload-buffer'
 
 Note that you need to set cells to run in the connecting buffer
 or no cell will be executed.
-Use the `ein:worksheet-turn-on-autoexec' command in notebook to
+Use the `ein2:worksheet-turn-on-autoexec' command in notebook to
 change the cells to run."
   (interactive)
-  (ein:connect-assert-connected)
-  (let ((autoexec-p (not (oref ein:%connect% :autoexec))))
-    (oset ein:%connect% :autoexec autoexec-p)
-    (ein:log 'info "Auto-execution mode is %s."
+  (ein2:connect-assert-connected)
+  (let ((autoexec-p (not (oref ein2:%connect% :autoexec))))
+    (oset ein2:%connect% :autoexec autoexec-p)
+    (ein2:log 'info "Auto-execution mode is %s."
              (if autoexec-p "enabled" "disabled"))))
 
 
 ;;; Auto-connect
 
 ;;;###autoload
-(defun ein:connect-to-default-notebook ()
+(defun ein2:connect-to-default-notebook ()
   "Connect to the default notebook specified by
-`ein:connect-default-notebook'.  Set this to `python-mode-hook'
+`ein2:connect-default-notebook'.  Set this to `python-mode-hook'
 to automatically connect any python-mode buffer to the
 notebook."
-  (ein:log 'verbose "CONNECT-TO-DEFAULT-NOTEBOOK")
-  (ein:and-let* ((nbpath ein:connect-default-notebook)
-                 ((not (ein:worksheet-buffer-p))))
+  (ein2:log 'verbose "CONNECT-TO-DEFAULT-NOTEBOOK")
+  (ein2:and-let* ((nbpath ein2:connect-default-notebook)
+                 ((not (ein2:worksheet-buffer-p))))
     (when (functionp nbpath)
       (setq nbpath (funcall nbpath)))
-    (ein:connect-to-notebook nbpath nil t)))
+    (ein2:connect-to-notebook nbpath nil t)))
 
 
 
-;;; ein:connect-mode
+;;; ein2:connect-mode
 
-(defvar ein:connect-mode-map (make-sparse-keymap))
+(defvar ein2:connect-mode-map (make-sparse-keymap))
 
-(let ((map ein:connect-mode-map))
-  (define-key map "\C-c\C-c" 'ein:connect-run-or-eval-buffer)
-  (define-key map "\C-c\C-l" 'ein:connect-reload-buffer)
-  (define-key map "\C-c\C-r" 'ein:connect-eval-region)
-  (define-key map (kbd "C-:") 'ein:shared-output-eval-string)
-  (define-key map "\C-c\C-f" 'ein:pytools-request-tooltip-or-help)
-  (define-key map "\C-c\C-i" 'ein:completer-complete)
-  (define-key map "\C-c\C-z" 'ein:connect-pop-to-notebook)
-  (define-key map "\C-c\C-a" 'ein:connect-toggle-autoexec)
-  (define-key map "\C-c\C-o" 'ein:console-open)
-  (define-key map "\C-c\C-x" 'ein:tb-show)
-  (define-key map "\M-."          'ein:pytools-jump-to-source-command)
-  (define-key map (kbd "C-c C-.") 'ein:pytools-jump-to-source-command)
-  (define-key map "\M-,"          'ein:pytools-jump-back-command)
-  (define-key map (kbd "C-c C-,") 'ein:pytools-jump-back-command)
-  (define-key map (kbd "C-c C-/") 'ein:notebook-scratchsheet-open)
+(let ((map ein2:connect-mode-map))
+  (define-key map "\C-c\C-c" 'ein2:connect-run-or-eval-buffer)
+  (define-key map "\C-c\C-l" 'ein2:connect-reload-buffer)
+  (define-key map "\C-c\C-r" 'ein2:connect-eval-region)
+  (define-key map (kbd "C-:") 'ein2:shared-output-eval-string)
+  (define-key map "\C-c\C-f" 'ein2:pytools-request-tooltip-or-help)
+  (define-key map "\C-c\C-i" 'ein2:completer-complete)
+  (define-key map "\C-c\C-z" 'ein2:connect-pop-to-notebook)
+  (define-key map "\C-c\C-a" 'ein2:connect-toggle-autoexec)
+  (define-key map "\C-c\C-o" 'ein2:console-open)
+  (define-key map "\C-c\C-x" 'ein2:tb-show)
+  (define-key map "\M-."          'ein2:pytools-jump-to-source-command)
+  (define-key map (kbd "C-c C-.") 'ein2:pytools-jump-to-source-command)
+  (define-key map "\M-,"          'ein2:pytools-jump-back-command)
+  (define-key map (kbd "C-c C-,") 'ein2:pytools-jump-back-command)
+  (define-key map (kbd "C-c C-/") 'ein2:notebook-scratchsheet-open)
   map)
 
-(defun ein:connect-mode-get-lighter ()
-  (if (oref ein:%connect% :autoexec)
-      (format " ein:c%s" (or ein:connect-aotoexec-lighter
-                             ein:cell-autoexec-prompt))
-    " ein:c"))
+(defun ein2:connect-mode-get-lighter ()
+  (if (oref ein2:%connect% :autoexec)
+      (format " ein2:c%s" (or ein2:connect-aotoexec-lighter
+                             ein2:cell-autoexec-prompt))
+    " ein2:c"))
 
-(define-minor-mode ein:connect-mode
+(define-minor-mode ein2:connect-mode
   "Minor mode for communicating with IPython notebook.
 
-\\{ein:connect-mode-map}"
-  :lighter (:eval (ein:connect-mode-get-lighter))
-  :keymap ein:connect-mode-map
+\\{ein2:connect-mode-map}"
+  :lighter (:eval (ein2:connect-mode-get-lighter))
+  :keymap ein2:connect-mode-map
   :group 'ein
-  (ein:complete-on-dot-install ein:connect-mode-map))
+  (ein2:complete-on-dot-install ein2:connect-mode-map))
 
-(put 'ein:connect-mode 'permanent-local t)
+(put 'ein2:connect-mode 'permanent-local t)
 
 
 (provide 'ein-connect)

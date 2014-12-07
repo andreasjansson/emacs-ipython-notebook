@@ -32,7 +32,7 @@
 (require 'ein-subpackages)
 
 ;;;###autoload
-(defun ein:dev-insert-mode-map (map-string)
+(defun ein2:dev-insert-mode-map (map-string)
   "Insert mode-map into rst document.  For README.rst."
   (save-excursion
     (insert "\n\n::\n\n")
@@ -45,8 +45,8 @@
       (insert (substitute-command-keys map-string))
       (rst-shift-region beg (point) 1))))
 
-(defun ein:load-files (&optional regex dir ignore-compiled)
-  (let* ((dir (or dir ein:source-dir))
+(defun ein2:load-files (&optional regex dir ignore-compiled)
+  (let* ((dir (or dir ein2:source-dir))
          (regex (or regex ".+"))
          (files (and
                  (file-accessible-directory-p dir)
@@ -55,24 +55,24 @@
       (setq files (mapcar #'file-name-sans-extension files)))
     (mapc #'load files)))
 
-(defun ein:dev-reload ()
+(defun ein2:dev-reload ()
   "Reload ein-*.el modules."
   (interactive)
-  (ein:notebook-kill-all-buffers)
-  (makunbound 'ein:notebook-mode-map)   ; so defvar works.
+  (ein2:notebook-kill-all-buffers)
+  (makunbound 'ein2:notebook-mode-map)   ; so defvar works.
   (load "ein-notebook")  ; ... but make sure it will be defined first.
-  (ein:load-files "^ein-.*\\.el$")
-  (ein:subpackages-reload))
+  (ein2:load-files "^ein-.*\\.el$")
+  (ein2:subpackages-reload))
 
-(defun* ein:dev-require-all (&key (ignore-p #'ignore))
-  (loop for f in (directory-files ein:source-dir nil "^ein-.*\\.el$")
+(defun* ein2:dev-require-all (&key (ignore-p #'ignore))
+  (loop for f in (directory-files ein2:source-dir nil "^ein-.*\\.el$")
         unless (or (equal f "ein-pkg.el")
                    (funcall ignore-p f))
         do (require (intern (file-name-sans-extension f)) nil t))
   ;; For `widget-button-press':
   (require 'wid-edit nil t))
 
-(defadvice backtrace (around ein:dev-short-backtrace)
+(defadvice backtrace (around ein2:dev-short-backtrace)
   "A hack to shorten backtrace.
 
 As code cells hold base64-encoded image data, backtrace tends to
@@ -82,33 +82,33 @@ for debugger is hard-coded.  See `debugger-setup-buffer'."
   (let ((print-level 1))
     ad-do-it))
 
-(defun ein:dev-patch-backtrace ()
+(defun ein2:dev-patch-backtrace ()
   "Monkey patch `backtrace' function to make it shorter."
   (interactive)
-  (ad-enable-advice 'backtrace 'around 'ein:dev-short-backtrace)
+  (ad-enable-advice 'backtrace 'around 'ein2:dev-short-backtrace)
   (ad-activate 'backtrace))
 
-(defun ein:dev-depatch-backtrace ()
-  "Undo `ein:dev-patch-backtrace'."
+(defun ein2:dev-depatch-backtrace ()
+  "Undo `ein2:dev-patch-backtrace'."
   (interactive)
   (ad-deactivate 'backtrace)
-  (ad-disable-advice 'backtrace 'around 'ein:dev-short-backtrace)
+  (ad-disable-advice 'backtrace 'around 'ein2:dev-short-backtrace)
   ;; In case it has other advices.
   (ad-activate 'backtrace))
 
-(defun ein:dev-show-debug-setting ()
+(defun ein2:dev-show-debug-setting ()
   "Show variables related to EIN debugging."
   (interactive)
   (message (concat "debug-on-error=%s websocket-debug=%s "
                    "websocket-callback-debug-on-error=%s "
-                   "ein:debug=%s ein:log-level=%s ein:log-message-level=%s")
+                   "ein2:debug=%s ein2:log-level=%s ein2:log-message-level=%s")
            debug-on-error websocket-debug websocket-callback-debug-on-error
-           ein:debug
-           (ein:log-level-int-to-name ein:log-level)
-           (ein:log-level-int-to-name ein:log-message-level)))
+           ein2:debug
+           (ein2:log-level-int-to-name ein2:log-level)
+           (ein2:log-level-int-to-name ein2:log-message-level)))
 
 ;;;###autoload
-(defun ein:dev-start-debug (&optional ws-callback)
+(defun ein2:dev-start-debug (&optional ws-callback)
   "Enable EIN debugging support.
 When the prefix argument is given, debugging support for websocket
 callback (`websocket-callback-debug-on-error') is enabled."
@@ -117,91 +117,91 @@ callback (`websocket-callback-debug-on-error') is enabled."
   (setq websocket-debug t)
   (when ws-callback
     (setq websocket-callback-debug-on-error t))
-  (setq ein:debug t)
-  (ein:log-set-level 'debug)
-  (ein:log-set-message-level 'verbose)
-  (ein:dev-patch-backtrace)
-  (ein:dev-show-debug-setting))
+  (setq ein2:debug t)
+  (ein2:log-set-level 'debug)
+  (ein2:log-set-message-level 'verbose)
+  (ein2:dev-patch-backtrace)
+  (ein2:dev-show-debug-setting))
 
 ;;;###autoload
-(defun ein:dev-stop-debug ()
-  "Disable debugging support enabled by `ein:dev-start-debug'."
+(defun ein2:dev-stop-debug ()
+  "Disable debugging support enabled by `ein2:dev-start-debug'."
   (interactive)
   (setq debug-on-error nil)
   (setq websocket-debug nil)
   (setq websocket-callback-debug-on-error nil)
-  (setq ein:debug nil)
-  (ein:log-set-level 'verbose)
-  (ein:log-set-message-level 'info)
-  (ein:dev-depatch-backtrace)
-  (ein:dev-show-debug-setting))
+  (setq ein2:debug nil)
+  (ein2:log-set-level 'verbose)
+  (ein2:log-set-message-level 'info)
+  (ein2:dev-depatch-backtrace)
+  (ein2:dev-show-debug-setting))
 
-(defun ein:dev-pop-to-debug-shell ()
+(defun ein2:dev-pop-to-debug-shell ()
   "Open shell channel websocket log buffer."
   (interactive)
   (pop-to-buffer
    (websocket-get-debug-buffer-create
-    (ein:$websocket-ws (ein:$kernel-shell-channel
-                        (ein:$notebook-kernel ein:%notebook%))))))
+    (ein2:$websocket-ws (ein2:$kernel-shell-channel
+                        (ein2:$notebook-kernel ein2:%notebook%))))))
 
-(defun ein:dev-pop-to-debug-iopub ()
+(defun ein2:dev-pop-to-debug-iopub ()
   "Open iopub channel websocket log buffer."
   (interactive)
   (pop-to-buffer
    (websocket-get-debug-buffer-create
-    (ein:$websocket-ws (ein:$kernel-iopub-channel
-                        (ein:$notebook-kernel ein:%notebook%))))))
+    (ein2:$websocket-ws (ein2:$kernel-iopub-channel
+                        (ein2:$notebook-kernel ein2:%notebook%))))))
 
-(defun ein:dev-notebook-plain-mode ()
-  "Use `ein:notebook-plain-mode'."
+(defun ein2:dev-notebook-plain-mode ()
+  "Use `ein2:notebook-plain-mode'."
   (interactive)
-  (setq ein:notebook-modes '(ein:notebook-plain-mode)))
+  (setq ein2:notebook-modes '(ein2:notebook-plain-mode)))
 
-(defun ein:dev-notebook-python-mode ()
-  "Use `ein:notebook-python-mode'."
+(defun ein2:dev-notebook-python-mode ()
+  "Use `ein2:notebook-python-mode'."
   (interactive)
-  (setq ein:notebook-modes '(ein:notebook-python-mode)))
+  (setq ein2:notebook-modes '(ein2:notebook-python-mode)))
 
-(defun ein:dev-notebook-mumamo-mode ()
-  "Use `ein:notebook-mumamo-mode'."
+(defun ein2:dev-notebook-mumamo-mode ()
+  "Use `ein2:notebook-mumamo-mode'."
   (interactive)
-  (setq ein:notebook-modes '(ein:notebook-mumamo-mode)))
+  (setq ein2:notebook-modes '(ein2:notebook-mumamo-mode)))
 
-(defun ein:dev-notebook-multilang-mode ()
-  "Use `ein:notebook-multilang-mode'."
+(defun ein2:dev-notebook-multilang-mode ()
+  "Use `ein2:notebook-multilang-mode'."
   (interactive)
-  (setq ein:notebook-modes '(ein:notebook-multilang-mode)))
+  (setq ein2:notebook-modes '(ein2:notebook-multilang-mode)))
 
-(defun ein:dev-sys-info--lib (name)
+(defun ein2:dev-sys-info--lib (name)
   (let* ((libsym (intern-soft name))
          (version-var (loop for fmt in '("%s-version" "%s:version")
                             if (intern-soft (format fmt name))
                             return it))
          (version (symbol-value version-var)))
     (list :name name
-          :path (ein:aand (locate-library name) (abbreviate-file-name it))
+          :path (ein2:aand (locate-library name) (abbreviate-file-name it))
           :featurep (featurep libsym)
           :version-var version-var
           :version version)))
 
-(defun ein:dev-dump-vars (names)
+(defun ein2:dev-dump-vars (names)
   (loop for var in names
         collect (intern (format ":%s" var))
-        collect (symbol-value (intern (format "ein:%s" var)))))
+        collect (symbol-value (intern (format "ein2:%s" var)))))
 
-(defun ein:dev-stdout-program (command args)
+(defun ein2:dev-stdout-program (command args)
   "Safely call COMMAND with ARGS and return its stdout."
-  (ein:aand (executable-find command)
+  (ein2:aand (executable-find command)
             (with-temp-buffer
               (erase-buffer)
               (apply #'call-process it nil t nil args)
               (buffer-string))))
 
-(defun ein:dev-sys-info ()
+(defun ein2:dev-sys-info ()
   (list
    "EIN system info"
    :emacs-version (emacs-version)
-   :emacs-bzr-version (ein:eval-if-bound 'emacs-bzr-version)
+   :emacs-bzr-version (ein2:eval-if-bound 'emacs-bzr-version)
    :window-system window-system
    ;; Emacs variant detection
    ;; http://coderepos.org/share/browser/lang/elisp/init-loader/init-loader.el
@@ -209,27 +209,27 @@ callback (`websocket-callback-debug-on-error') is enabled."
    (cond ((featurep 'meadow) 'meadow)
          ((featurep 'carbon-emacs-package) 'carbon))
    :os (list
-        :uname (ein:dev-stdout-program "uname" '("-a"))
-        :lsb-release (ein:dev-stdout-program "lsb_release" '("-a")))
-   :image-types (ein:eval-if-bound 'image-types)
-   :image-types-available (ein:filter #'image-type-available-p
-                                      (ein:eval-if-bound 'image-types))
+        :uname (ein2:dev-stdout-program "uname" '("-a"))
+        :lsb-release (ein2:dev-stdout-program "lsb_release" '("-a")))
+   :image-types (ein2:eval-if-bound 'image-types)
+   :image-types-available (ein2:filter #'image-type-available-p
+                                      (ein2:eval-if-bound 'image-types))
    :request (list :backend request-backend)
-   :ein (append (list :version (ein:version))
-                (ein:dev-dump-vars '("source-dir")))
-   :lib (ein:filter (lambda (info) (plist-get info :path))
-                    (mapcar #'ein:dev-sys-info--lib
+   :ein (append (list :version (ein2:version))
+                (ein2:dev-dump-vars '("source-dir")))
+   :lib (ein2:filter (lambda (info) (plist-get info :path))
+                    (mapcar #'ein2:dev-sys-info--lib
                             '("websocket" "request" "auto-complete" "mumamo"
                               "auto-complete" "popup" "fuzzy" "pos-tip"
                               "python" "python-mode" "markdown-mode"
                               "smartrep" "anything" "helm")))))
 
-(defun ein:dev-show-sys-info (&optional show-in-buffer)
+(defun ein2:dev-show-sys-info (&optional show-in-buffer)
   "Show Emacs and library information."
   (interactive (list t))
-  (let ((info (ein:dev-sys-info)))
+  (let ((info (ein2:dev-sys-info)))
     (if show-in-buffer
-        (let ((buffer (get-buffer-create "*ein:sys-info*")))
+        (let ((buffer (get-buffer-create "*ein2:sys-info*")))
           (with-current-buffer buffer
             (erase-buffer)
             (pp info buffer)
@@ -237,10 +237,10 @@ callback (`websocket-callback-debug-on-error') is enabled."
       (message "EIN INFO:\n%s" (pp-to-string info)))))
 
 ;;;###autoload
-(defun ein:dev-bug-report-template ()
+(defun ein2:dev-bug-report-template ()
   "Open a buffer with bug report template."
   (interactive)
-  (let ((buffer (generate-new-buffer "*ein:bug-report*")))
+  (let ((buffer (generate-new-buffer "*ein2:bug-report*")))
     (with-current-buffer buffer
       (erase-buffer)
       (insert "<!--
@@ -294,19 +294,19 @@ https://github.com/millejoh/emacs-ipython-notebook/issues/new
 ")
       (insert "## System info:\n\n```cl\n")
       (condition-case err
-          (ein:dev-print-sys-info buffer)
-        (error (insert (format "`ein:dev-sys-info' produce: %S" err))))
+          (ein2:dev-print-sys-info buffer)
+        (error (insert (format "`ein2:dev-sys-info' produce: %S" err))))
       (insert "```\n")
       (goto-char (point-min))
       (when (fboundp 'markdown-mode)
         (markdown-mode))
       (pop-to-buffer buffer))))
 
-(defun ein:dev-print-sys-info (&optional stream)
-  (princ (ein:dev--pp-to-string (ein:dev-sys-info))
+(defun ein2:dev-print-sys-info (&optional stream)
+  (princ (ein2:dev--pp-to-string (ein2:dev-sys-info))
          (or stream standard-output)))
 
-(defun ein:dev--pp-to-string (object)
+(defun ein2:dev--pp-to-string (object)
   "`pp-to-string' with additional prettifier."
   (with-temp-buffer
     (erase-buffer)
@@ -315,12 +315,12 @@ https://github.com/millejoh/emacs-ipython-notebook/issues/new
     (goto-char (point-min))
     (let ((emacs-lisp-mode-hook nil))
       (emacs-lisp-mode))
-    (ein:dev--prettify-sexp)
+    (ein2:dev--prettify-sexp)
     (buffer-string)))
 
-(defun ein:dev--prettify-sexp ()
+(defun ein2:dev--prettify-sexp ()
   "Prettify s-exp at point recursively.
-Use this function in addition to `pp' (see `ein:dev--pp-to-string')."
+Use this function in addition to `pp' (see `ein2:dev--pp-to-string')."
   (down-list)
   (condition-case nil
       (while t
@@ -329,7 +329,7 @@ Use this function in addition to `pp' (see `ein:dev--pp-to-string')."
         (when (looking-back ")")
           (save-excursion
             (backward-sexp)
-            (ein:dev--prettify-sexp)))
+            (ein2:dev--prettify-sexp)))
         ;; Add newline before keyword symbol.
         (when (looking-at-p " :")
           (newline-and-indent))

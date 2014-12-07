@@ -27,52 +27,52 @@
 
 (require 'ein-worksheet)
 
-(defcustom ein:iexec-delay 0.3
+(defcustom ein2:iexec-delay 0.3
   "Delay before executing cell after change in second."
   :type 'number
   :group 'ein)
 
-(defvar ein:iexec-timer nil)
+(defvar ein2:iexec-timer nil)
 
-(defun ein:iexec-execute-cell (cell)
-  "Call `ein:notebook-execute-cell' after `ein:iexec-delay' second.
+(defun ein2:iexec-execute-cell (cell)
+  "Call `ein2:notebook-execute-cell' after `ein2:iexec-delay' second.
 If the previous execution timer is not fired yet, cancel the timer."
-  (when ein:iexec-timer
-    (cancel-timer ein:iexec-timer))
-  (setq ein:iexec-timer
-        (run-with-idle-timer ein:iexec-delay nil
-                             #'ein:worksheet-execute-cell
-                             ein:%worksheet% cell)))
+  (when ein2:iexec-timer
+    (cancel-timer ein2:iexec-timer))
+  (setq ein2:iexec-timer
+        (run-with-idle-timer ein2:iexec-delay nil
+                             #'ein2:worksheet-execute-cell
+                             ein2:%worksheet% cell)))
 
-(defun ein:iexec-should-execute-p (cell beg end)
+(defun ein2:iexec-should-execute-p (cell beg end)
   "Return non-`nil' if CELL should be executed by the change within
 BEG and END."
-  (and (ein:codecell-p cell)
+  (and (ein2:codecell-p cell)
        this-command
-       (ein:aif (ein:cell-input-pos-min cell) (<= it beg))
-       (ein:aif (ein:cell-input-pos-max cell) (>= it end))))
+       (ein2:aif (ein2:cell-input-pos-min cell) (<= it beg))
+       (ein2:aif (ein2:cell-input-pos-max cell) (>= it end))))
 
-(defun ein:iexec-after-change (beg end -ignore-len-)
+(defun ein2:iexec-after-change (beg end -ignore-len-)
   "Called via `after-change-functions' hook."
-  (let ((cell (ein:worksheet-get-current-cell :pos beg)))
-    (when (ein:iexec-should-execute-p cell beg end)
-      (ein:iexec-execute-cell cell))))
+  (let ((cell (ein2:worksheet-get-current-cell :pos beg)))
+    (when (ein2:iexec-should-execute-p cell beg end)
+      (ein2:iexec-execute-cell cell))))
 
 ;;;###autoload
-(define-minor-mode ein:iexec-mode
+(define-minor-mode ein2:iexec-mode
   "Instant cell execution minor mode.
 Code cell at point will be automatically executed after any
 change in its input area."
-  :lighter " ein:i"
+  :lighter " ein2:i"
   :group 'ein
-  (if ein:iexec-mode
-      (add-hook 'after-change-functions 'ein:iexec-after-change nil t)
-    (remove-hook 'after-change-functions 'ein:iexec-after-change t)))
+  (if ein2:iexec-mode
+      (add-hook 'after-change-functions 'ein2:iexec-after-change nil t)
+    (remove-hook 'after-change-functions 'ein2:iexec-after-change t)))
 
-;; To avoid MuMaMo to discard `ein:iexec-after-change', make it
+;; To avoid MuMaMo to discard `ein2:iexec-after-change', make it
 ;; permanent local.
-(put 'ein:iexec-after-change 'permanent-local-hook t)
-(put 'ein:iexec-mode 'permanent-local t)
+(put 'ein2:iexec-after-change 'permanent-local-hook t)
+(put 'ein2:iexec-mode 'permanent-local t)
 
 (provide 'ein-iexec)
 

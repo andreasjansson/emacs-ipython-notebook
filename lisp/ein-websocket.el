@@ -31,20 +31,20 @@
 (require 'ein-core)
 
 
-(defstruct ein:$websocket
+(defstruct ein2:$websocket
   "A wrapper object of `websocket'.
 
-`ein:$websocket-ws'               : an instance returned by `websocket-open'
+`ein2:$websocket-ws'               : an instance returned by `websocket-open'
 
-`ein:$websocket-onmessage'        : function called with (PACKET &rest ARGS)'
-`ein:$websocket-onclose'          : function called with (WEBSOCKET &rest ARGS)'
-`ein:$websocket-onopen'           : function called with (&rest ARGS)'
+`ein2:$websocket-onmessage'        : function called with (PACKET &rest ARGS)'
+`ein2:$websocket-onclose'          : function called with (WEBSOCKET &rest ARGS)'
+`ein2:$websocket-onopen'           : function called with (&rest ARGS)'
 
-`ein:$websocket-onmessage-args'   : optional arguments for onmessage callback'
-`ein:$websocket-onclose-args'     : optional arguments for onclose callback'
-`ein:$websocket-onopen-args'      : optional arguments for onopen callback'
+`ein2:$websocket-onmessage-args'   : optional arguments for onmessage callback'
+`ein2:$websocket-onclose-args'     : optional arguments for onclose callback'
+`ein2:$websocket-onopen-args'      : optional arguments for onopen callback'
 
-`ein:$websocket-closed-by-client' : t/nil'
+`ein2:$websocket-closed-by-client' : t/nil'
 "
   ws
   onmessage
@@ -58,9 +58,9 @@
 
 ;; Issues opening websockets in IPython 2.0, think it is related to
 ;; http://stackoverflow.com/questions/22202182/error-on-websocket-when-try-to-use-ipython-notebook-in-emacs
-(defun ein:websocket (url &optional onmessage onclose onopen
+(defun ein2:websocket (url &optional onmessage onclose onopen
                           onmessage-args onclose-args onopen-args)
-  (let ((websocket (make-ein:$websocket
+  (let ((websocket (make-ein2:$websocket
                     :onmessage onmessage
                     :onclose onclose
                     :onopen onopen
@@ -72,39 +72,39 @@
              :on-open
              (lambda (ws)
                (let ((websocket (websocket-client-data ws)))
-                 (ein:aif (ein:$websocket-onopen websocket)
-                     (apply it (ein:$websocket-onopen-args websocket)))))
+                 (ein2:aif (ein2:$websocket-onopen websocket)
+                     (apply it (ein2:$websocket-onopen-args websocket)))))
              :on-message
              (lambda (ws frame)
                (let ((websocket (websocket-client-data ws))
                      (packet (websocket-frame-payload frame)))
-                 (ein:aif (ein:$websocket-onmessage websocket)
+                 (ein2:aif (ein2:$websocket-onmessage websocket)
                      (when packet
                        (apply it packet
-                              (ein:$websocket-onmessage-args websocket))))))
+                              (ein2:$websocket-onmessage-args websocket))))))
              :on-close
              (lambda (ws)
                (let ((websocket (websocket-client-data ws)))
-                 (ein:aif (ein:$websocket-onclose websocket)
+                 (ein2:aif (ein2:$websocket-onclose websocket)
                      (apply it websocket
-                            (ein:$websocket-onclose-args websocket))))))))
+                            (ein2:$websocket-onclose-args websocket))))))))
     (setf (websocket-client-data ws) websocket)
-    (setf (ein:$websocket-ws websocket) ws)
+    (setf (ein2:$websocket-ws websocket) ws)
     websocket))
 
 
-(defun ein:websocket-open-p (websocket)
-  (eql (websocket-ready-state (ein:$websocket-ws websocket)) 'open))
+(defun ein2:websocket-open-p (websocket)
+  (eql (websocket-ready-state (ein2:$websocket-ws websocket)) 'open))
 
 
-(defun ein:websocket-send (websocket text)
-  ;;  (ein:log 'info "WS: Sent message %s" text)
-  (websocket-send-text (ein:$websocket-ws websocket) text))
+(defun ein2:websocket-send (websocket text)
+  ;;  (ein2:log 'info "WS: Sent message %s" text)
+  (websocket-send-text (ein2:$websocket-ws websocket) text))
 
 
-(defun ein:websocket-close (websocket)
-  (setf (ein:$websocket-closed-by-client websocket) t)
-  (websocket-close (ein:$websocket-ws websocket)))
+(defun ein2:websocket-close (websocket)
+  (setf (ein2:$websocket-closed-by-client websocket) t)
+  (websocket-close (ein2:$websocket-ws websocket)))
 
 
 (provide 'ein-websocket)

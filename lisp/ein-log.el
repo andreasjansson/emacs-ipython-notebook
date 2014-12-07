@@ -29,9 +29,9 @@
 (require 'ein-core)
 
 
-(defvar ein:log-all-buffer-name "*ein:log-all*")
+(defvar ein2:log-all-buffer-name "*ein2:log-all*")
 
-(defvar ein:log-level-def
+(defvar ein2:log-level-def
   '(;; debugging
     (blather . 60) (trace . 50) (debug . 40)
     ;; information
@@ -41,71 +41,71 @@
   "Named logging levels.")
 ;; Some names are stolen from supervisord (http://supervisord.org/logging.html)
 
-(defvar ein:log-level 30)
-(defvar ein:log-message-level 20)
+(defvar ein2:log-level 30)
+(defvar ein2:log-message-level 20)
 
-(defvar ein:log-print-level 1 "`print-level' for `ein:log'")
-(defvar ein:log-print-length 10 "`print-length' for `ein:log'")
-(defvar ein:log-max-string 1000)
+(defvar ein2:log-print-level 1 "`print-level' for `ein2:log'")
+(defvar ein2:log-print-length 10 "`print-length' for `ein2:log'")
+(defvar ein2:log-max-string 1000)
 
 
-(defun ein:log-set-level (level)
-  (setq ein:log-level (ein:log-level-name-to-int level)))
+(defun ein2:log-set-level (level)
+  (setq ein2:log-level (ein2:log-level-name-to-int level)))
 
-(defun ein:log-set-message-level (level)
-  (setq ein:log-message-level (ein:log-level-name-to-int level)))
+(defun ein2:log-set-message-level (level)
+  (setq ein2:log-message-level (ein2:log-level-name-to-int level)))
 
-(defun ein:log-level-int-to-name (int)
-  (loop for (n . i) in ein:log-level-def
+(defun ein2:log-level-int-to-name (int)
+  (loop for (n . i) in ein2:log-level-def
         when (>= int i)
         return n
         finally 'error))
 
-(defun ein:log-level-name-to-int (name)
-  (cdr (assq name ein:log-level-def)))
+(defun ein2:log-level-name-to-int (name)
+  (cdr (assq name ein2:log-level-def)))
 
-(defun ein:log-wrapper (level func)
-  (setq level (ein:log-level-name-to-int level))
-  (when (<= level ein:log-level)
-    (let* ((levname (ein:log-level-int-to-name level))
-           (print-level ein:log-print-level)
-           (print-length ein:log-print-length)
+(defun ein2:log-wrapper (level func)
+  (setq level (ein2:log-level-name-to-int level))
+  (when (<= level ein2:log-level)
+    (let* ((levname (ein2:log-level-int-to-name level))
+           (print-level ein2:log-print-level)
+           (print-length ein2:log-print-length)
            (msg (format "[%s] %s"  levname (funcall func)))
            (orig-buffer (current-buffer)))
-      (if (and ein:log-max-string
-               (> (length msg) ein:log-max-string))
-          (setq msg (substring msg 0 ein:log-max-string)))
-      (ein:with-read-only-buffer (get-buffer-create ein:log-all-buffer-name)
+      (if (and ein2:log-max-string
+               (> (length msg) ein2:log-max-string))
+          (setq msg (substring msg 0 ein2:log-max-string)))
+      (ein2:with-read-only-buffer (get-buffer-create ein2:log-all-buffer-name)
         (goto-char (point-max))
         (insert msg (format " @%S" orig-buffer) "\n"))
-      (when (<= level ein:log-message-level)
-        (message "ein: %s" msg)))))
+      (when (<= level ein2:log-message-level)
+        (message "ein2: %s" msg)))))
 
-(defmacro ein:log (level string &rest args)
+(defmacro ein2:log (level string &rest args)
   (declare (indent 1))
-  `(ein:log-wrapper ,level (lambda () (format ,string ,@args))))
+  `(ein2:log-wrapper ,level (lambda () (format ,string ,@args))))
 
 ;; FIXME: this variable must go to somewhere more central
-(defvar ein:debug nil
+(defvar ein2:debug nil
   "Set to non-`nil' to raise errors instead of suppressing it.
-Change the behavior of `ein:log-ignore-errors'.")
+Change the behavior of `ein2:log-ignore-errors'.")
 
-(defmacro ein:log-ignore-errors (&rest body)
+(defmacro ein2:log-ignore-errors (&rest body)
   "Execute BODY; if an error occurs, log the error and return nil.
 Otherwise, return result of last form in BODY."
   (declare (debug t) (indent 0))
-  `(if ein:debug
+  `(if ein2:debug
        (progn ,@body)
      (condition-case err
          (progn ,@body)
        (error
-        (ein:log 'debug "Error: %S" err)
-        (ein:log 'error (error-message-string err))
+        (ein2:log 'debug "Error: %S" err)
+        (ein2:log 'error (error-message-string err))
         nil))))
 
-(defun ein:log-pop-to-all-buffer ()
+(defun ein2:log-pop-to-all-buffer ()
   (interactive)
-  (pop-to-buffer (get-buffer-create ein:log-all-buffer-name)))
+  (pop-to-buffer (get-buffer-create ein2:log-all-buffer-name)))
 
 (provide 'ein-log)
 

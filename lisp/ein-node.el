@@ -31,34 +31,34 @@
 (require 'ein-core)
 
 
-(defstruct ein:$node
+(defstruct ein2:$node
   path                                  ; list of path
   data                                  ; actual data
   class                                 ; list
   )
 
-(defun ein:node-new (path data &optional class &rest args)
-  (apply #'make-ein:$node :path path :data data :class class args))
+(defun ein2:node-new (path data &optional class &rest args)
+  (apply #'make-ein2:$node :path path :data data :class class args))
 
-(defun ein:node-add-class (node &rest classes)
-  (mapc (lambda (c) (add-to-list (ein:$node-class node) c)) classes))
+(defun ein2:node-add-class (node &rest classes)
+  (mapc (lambda (c) (add-to-list (ein2:$node-class node) c)) classes))
 
-(defun ein:node-remove-class (node &rest classes)
-  (let ((node-class (ein:$node-class node)))
+(defun ein2:node-remove-class (node &rest classes)
+  (let ((node-class (ein2:$node-class node)))
     (mapc (lambda (c) (setq node-class (delq c node-class))) classes)
-    (setf (ein:$node-class node) node-class)))
+    (setf (ein2:$node-class node) node-class)))
 
-(defun ein:node-has-class (node class)
-  (memq class (ein:$node-class node)))
+(defun ein2:node-has-class (node class)
+  (memq class (ein2:$node-class node)))
 
-(defun ein:node-filter (ewoc-node-list &rest args)
-  (loop for (key . class) in (ein:plist-iter args)
+(defun ein2:node-filter (ewoc-node-list &rest args)
+  (loop for (key . class) in (ein2:plist-iter args)
         do (setq ewoc-node-list
                  (loop for ewoc-node in ewoc-node-list
                        for node = (ewoc-data ewoc-node)
                        when (case key
-                              (:is (ein:node-has-class node class))
-                              (:not (not (ein:node-has-class node class)))
+                              (:is (ein2:node-has-class node class))
+                              (:not (not (ein2:node-has-class node class)))
                               (t (error "%s is not supported" key)))
                        collect ewoc-node)))
   ewoc-node-list)
