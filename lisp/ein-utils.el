@@ -130,17 +130,79 @@ before previous opening parenthesis."
 ;;; URL utils
 
 (defvar ein:url-localhost "127.0.0.1")
-(defvar ein:url-localhost-template "http://127.0.0.1:%s")
+(defvar ein:url-default-protocol "http")
+
+(defstruct ein:url
+  protocol
+  host
+  port
+  path)
+
+(defun ein:url-force-protocol (url-or-port protocol &rest paths)
+  (let ((path (loop for p in paths
+                    for i from 1
+                    if (= i (length paths))
+                      concat (concat "/" (ein:trim-left p "/"))
+                    else
+                      concat (concat "/" (ein:trim p "/"))))
+        (url (ein:parse-url-no-path (format "%s" url-or-port))))
+    (when protocol
+      (setf (ein:url-protocol url) protocol))
+    (setf (ein:url-path url) path)
+    (ein:url-to-string url)))
 
 (defun ein:url (url-or-port &rest paths)
-  (loop with url = (if (integerp url-or-port)
-                       (format ein:url-localhost-template url-or-port)
-                     url-or-port)
-        for p in paths
-        do (setq url (concat (ein:trim-right url "/")
-                             "/"
-                             (ein:trim-left p "/")))
-        finally return url))
+  (apply #'ein:url-force-protocol url-or-port nil paths))
+
+(defun ein:parse-url-no-path (url-string)
+  ; not perfect, but should catch most urls
+  (let* ((protocol-regex "\\([a-zA-Z0-9]+\\)")
+         (host-regex "\\([-._a-zA-Z0-9]*[-._a-zA-Z][-._a-zA-Z0-9]*\\)")
+         (port-regex "\\([0-9]+\\)")
+         (url-regex (concat "^"
+                            "\\(?:"
+                            protocol-regex ; 1
+                            "://"
+                            host-regex  ; 2
+                            ":"
+                            port-regex  ; 3
+                            "\\|"
+                            protocol-regex ; 4
+                            "://"
+                            host-regex  ; 5
+                            "\\|"
+                            host-regex  ; 6
+                            ":"
+                            port-regex  ; 7
+                            "\\|"
+                            host-regex  ; 8
+                            "\\|"
+                            port-regex  ; 9
+                            "\\)"
+                            "$")))
+    (unless (string-match url-regex url-string)
+      (error (format "Not a valid URL: %s" url-string)))
+    (make-ein:url
+     :protocol (or (match-string 1 url-string)
+                   (match-string 4 url-string)
+                   ein:url-default-protocol)
+     :host (or (match-string 2 url-string)
+               (match-string 5 url-string)
+               (match-string 6 url-string)
+               (match-string 8 url-string)
+               ein:url-localhost)
+     :port (or (match-string 3 url-string)
+               (match-string 7 url-string)
+               (match-string 9 url-string)))))
+
+(defun ein:url-to-string (url)
+  (concat
+   (ein:url-protocol url)
+   "://"
+   (ein:url-host url)
+   (when (ein:url-port url)
+     (format ":%s" (ein:url-port url)))
+   (ein:url-path url)))
 
 (defun ein:url-no-cache (url)
   "Imitate `cache=false' of `jQuery.ajax'.

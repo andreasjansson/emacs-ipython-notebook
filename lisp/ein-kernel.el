@@ -183,8 +183,7 @@
 See: https://github.com/ipython/ipython/pull/3307"
   (if (string-match-p "^wss?://" ws_url)
       ws_url
-    (let ((ein:url-localhost-template "ws://127.0.0.1:%s"))
-      (ein:url (ein:$kernel-url-or-port kernel)))))
+    (ein:url-force-protocol (ein:$kernel-url-or-port kernel) "ws")))
 
 
 (defun ein:kernel--websocket-closed (kernel ws-url early)
